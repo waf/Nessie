@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nessie", "Nessie\Nessie.csproj", "{C609E6DE-EC4D-4626-9220-E5979151340D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nessie.Tests", "Nessie.Tests\Nessie.Tests.csproj", "{B0E3DC5E-576D-46FE-B281-20306BBC74CB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C609E6DE-EC4D-4626-9220-E5979151340D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C609E6DE-EC4D-4626-9220-E5979151340D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C609E6DE-EC4D-4626-9220-E5979151340D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C609E6DE-EC4D-4626-9220-E5979151340D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0E3DC5E-576D-46FE-B281-20306BBC74CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0E3DC5E-576D-46FE-B281-20306BBC74CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0E3DC5E-576D-46FE-B281-20306BBC74CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0E3DC5E-576D-46FE-B281-20306BBC74CB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
