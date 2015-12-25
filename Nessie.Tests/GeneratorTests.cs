@@ -24,23 +24,25 @@ namespace Nessie.Tests
         }
 
         [TestMethod]
-        public void Generator_WithAutoContent()
+        public void Generator_WithMultipleTemplate_AppliesAllTemplates()
         {
             filesToRead = new Dictionary<string, string>()
             {
-                {"_template_.html", "prefix {{body}} suffix" },
+                {"_template_.html", "t1 {{body}} t1" },
                 {"index.md", "I'm the *root* index file" },
+                {"blog/_template_.html", "{% capture body %}t2 {{ body }} t2{% endcapture %}" },
                 {"blog/index.md", "{% capture body %}my posts:\r\n{% for item in post %}\r\n- {{ item.title }}{% endfor %}\r\n{% endcapture %}" },
+                {"blog/_template_post.html", "{% capture body %}t3 {{ body }} t3{% endcapture %}" },
                 {"blog/_post_first.md", "{% assign title = 'Title 1' %}{% capture body %} content one {% endcapture %}" },
-                {"blog/_post_second.md", "{% assign title = 'Title 2' %}{% capture body %} content two {% endcapture %}" },
+                {"blog/_post_second.md", "{% assign nessie-url-prefix = 'foo\\bar' %}{% assign title = 'Title 2' %}{% capture body %} content two {% endcapture %}" },
             };
 
             generator.Generate("", filesToRead.Select(kvp => kvp.Key).ToList(), "_output");
 
             Assert.AreEqual("<p>I'm the <em>root</em> index file</p>", writtenFiles["_output\\index.html"]);
-            Assert.AreEqual("prefix <p>my posts:</p>\n<ul>\n<li>Title 1</li>\n<li>Title 2</li>\n</ul> suffix", writtenFiles["_output\\blog\\index.html"]);
-            Assert.AreEqual("prefix <p>content one </p> suffix", writtenFiles["_output\\blog\\_post_first.html"]);
-            Assert.AreEqual("prefix <p>content two </p> suffix", writtenFiles["_output\\blog\\_post_second.html"]);
+            Assert.AreEqual("t1 t2 <p>my posts:</p>\n<ul>\n<li>Title 1</li>\n<li>Title 2</li>\n</ul> t2 t1", writtenFiles["_output\\blog\\index.html"]);
+            Assert.AreEqual("t1 t2 t3 <p>content one </p> t3 t2 t1", writtenFiles["_output\\blog\\first.html"]);
+            Assert.AreEqual("t1 t2 t3 <p>content two </p> t3 t2 t1", writtenFiles["_output\\foo\\bar\\second.html"]);
             Assert.AreEqual(4, writtenFiles.Count());
             return;
         }

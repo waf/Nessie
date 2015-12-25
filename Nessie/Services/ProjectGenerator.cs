@@ -49,7 +49,7 @@ namespace Nessie.Services
                                       let templateCategory = template.FileNameWithoutExtension.Replace("_template_", "")
                                       where directories.Contains(template.Directory) &&
                                         (templateCategory == "" || file.Category == templateCategory)
-                                      orderby template.Directory.Length
+                                      orderby template.FullyQualifiedName.Length descending
                                       select template;
 
             return applicableTemplates.ToList();

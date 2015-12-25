@@ -39,5 +39,10 @@ namespace Nessie
         public string FileNameWithoutExtension { get; private set; }
         public string FullyQualifiedName { get; private set; }
         public string Category { get; private set; }
+
+        public override string ToString()
+        {
+            return $"{FullyQualifiedName} ({Category})";
+        }
     }
 }

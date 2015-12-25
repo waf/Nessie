@@ -19,39 +19,50 @@ namespace Nessie.Services
             this.markdown = markdown ?? new MarkdownConverter();
         }
 
-        public TemplateOutput GenerateFile(FileLocation inputFileLocation, string inputContent, string[] templates, Dictionary<string, IBuffer<Hash>> allTemplateVariables)
+        public TemplateOutput GenerateFile(FileLocation inputFileLocation, string inputContent, string[] templates, Dictionary<string, IBuffer<Hash>> projectVariables)
         {
-            Hash templateVariableExports;
-            string templateResult = templater.Convert(inputContent, allTemplateVariables.AsTemplateValues(), out templateVariableExports);
-            string fileOutput;
-            if (!string.IsNullOrWhiteSpace(templateResult))
+            Hash fileVariables;
+            string fileOutput = templater.Convert(inputContent, projectVariables.AsTemplateValues(), out fileVariables);
+            if (!string.IsNullOrWhiteSpace(fileOutput))
             {
-                fileOutput = markdown.Convert(templateResult);
+                fileOutput = markdown.Convert(fileOutput);
             }
             else //empty output, so the file just exported variables. run the variables through the templates
             {
-                fileOutput = templateResult;
-                Hash exports = templateVariableExports
+                Hash exports = fileVariables
                     .ToDictionary(kvp => kvp.Key, kvp => markdown.Convert(kvp.Value.ToString()))
                     .AsTemplateValues();
+                exports.Merge(projectVariables.AsTemplateValues());
 
                 foreach (var template in templates)
                 {
                     Hash iterationExports;
                     fileOutput = templater.Convert(template, exports, out iterationExports);
-                    var markdownedExports = iterationExports
-                        .ToDictionary(kvp => kvp.Key, kvp => markdown.Convert(kvp.Value.ToString()))
-                        .AsTemplateValues();
-                    exports.Merge(markdownedExports);
+                    exports.Merge(iterationExports);
+                    if (!string.IsNullOrWhiteSpace(fileOutput))
+                    {
+                        break;
+                    }
                 }
             }
-            var outputLocation = CreateOutputFileName(inputFileLocation);
-            return new TemplateOutput(outputLocation, fileOutput, templateVariableExports);
+            var outputLocation = CreateOutputFileName(inputFileLocation, fileVariables);
+            return new TemplateOutput(outputLocation, fileOutput, fileVariables);
         }
 
-        private FileLocation CreateOutputFileName(FileLocation file)
+
+        private FileLocation CreateOutputFileName(FileLocation file, Hash variables)
         {
-            return new FileLocation(file.Directory, file.FileNameWithoutExtension, ".html");
+            object outputPattern;
+            string prefix =
+                variables.TryGetValue("nessie-url-prefix", out outputPattern) ?
+                templater.Convert((string)outputPattern, variables) :
+                file.Directory;
+
+            string filename = file.Category == "" ?
+                file.FileNameWithoutExtension :
+                file.FileNameWithoutExtension.Replace($"_{file.Category}_", "");
+
+            return new FileLocation(prefix, filename, ".html");
         }
     }
 }

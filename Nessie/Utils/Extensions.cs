@@ -16,8 +16,7 @@ namespace Nessie
             return template.Render(Hash.FromDictionary(objectDictionary));
         }
 
-
-        public static Hash AsTemplateValues<T>(this Dictionary<string, T> templateValues)
+        public static Hash AsTemplateValues<T>(this IDictionary<string, T> templateValues)
         {
             // hack to get around lack of safe covariance in IDictionary
             var objectDictionary = templateValues.ToDictionary(k => k.Key, k => (object)k.Value);
