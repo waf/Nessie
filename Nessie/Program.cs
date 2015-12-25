@@ -17,7 +17,7 @@ namespace Nessie
                 .GetFiles(root, "*", SearchOption.AllDirectories)
                 .ToList();
 
-            var generator = new DirectoryGenerator();
+            var generator = new ProjectGenerator();
             generator.Generate(root, files, "_output2");
             Console.WriteLine("done");
             Console.ReadKey();

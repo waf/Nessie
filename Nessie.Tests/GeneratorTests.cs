@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Nessie.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,14 +11,14 @@ namespace Nessie.Tests
     [TestClass]
     public class GeneratorTests
     {
-        private DirectoryGenerator generator;
+        private ProjectGenerator generator;
         private IDictionary<string, string> filesToRead = null;
         private readonly IDictionary<string, string> writtenFiles = new Dictionary<string, string>();
 
         [TestInitialize]
         public void Setup()
         {
-            this.generator = new DirectoryGenerator(
+            this.generator = new ProjectGenerator(
                 readFile: name => filesToRead[name],
                 writeFile: (name, contents) => writtenFiles[name] = contents);
         }
@@ -27,14 +28,14 @@ namespace Nessie.Tests
         {
             filesToRead = new Dictionary<string, string>()
             {
-                {"_auto.html", "prefix {{body}} suffix" },
+                {"_template_.html", "prefix {{body}} suffix" },
                 {"index.md", "I'm the *root* index file" },
                 {"blog/index.md", "{% capture body %}my posts:\r\n{% for item in post %}\r\n- {{ item.title }}{% endfor %}\r\n{% endcapture %}" },
                 {"blog/_post_first.md", "{% assign title = 'Title 1' %}{% capture body %} content one {% endcapture %}" },
                 {"blog/_post_second.md", "{% assign title = 'Title 2' %}{% capture body %} content two {% endcapture %}" },
             };
 
-            generator.Generate("", filesToRead.Select(kvp => kvp.Key).ToList());
+            generator.Generate("", filesToRead.Select(kvp => kvp.Key).ToList(), "_output");
 
             Assert.AreEqual("<p>I'm the <em>root</em> index file</p>", writtenFiles["_output\\index.html"]);
             Assert.AreEqual("prefix <p>my posts:</p>\n<ul>\n<li>Title 1</li>\n<li>Title 2</li>\n</ul> suffix", writtenFiles["_output\\blog\\index.html"]);

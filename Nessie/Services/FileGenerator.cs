@@ -19,19 +19,31 @@ namespace Nessie.Services
             this.markdown = markdown ?? new MarkdownConverter();
         }
 
-        public TemplateOutput GenerateFile(FileLocation inputFileLocation, string inputContent, string autoContent, Dictionary<string, IBuffer<Hash>> allTemplateVariables)
+        public TemplateOutput GenerateFile(FileLocation inputFileLocation, string inputContent, string[] templates, Dictionary<string, IBuffer<Hash>> allTemplateVariables)
         {
             Hash templateVariableExports;
-            string templateResult = templater.Convert(inputContent, allTemplateVariables, out templateVariableExports);
+            string templateResult = templater.Convert(inputContent, allTemplateVariables.AsTemplateValues(), out templateVariableExports);
             string fileOutput;
             if (!string.IsNullOrWhiteSpace(templateResult))
             {
                 fileOutput = markdown.Convert(templateResult);
             }
-            else
+            else //empty output, so the file just exported variables. run the variables through the templates
             {
-                var markdownedHashes = templateVariableExports.ToDictionary(kvp => kvp.Key, kvp => markdown.Convert(kvp.Value.ToString()));
-                fileOutput = Template.Parse(autoContent).RenderFromStringDictionary(markdownedHashes);
+                fileOutput = templateResult;
+                Hash exports = templateVariableExports
+                    .ToDictionary(kvp => kvp.Key, kvp => markdown.Convert(kvp.Value.ToString()))
+                    .AsTemplateValues();
+
+                foreach (var template in templates)
+                {
+                    Hash iterationExports;
+                    fileOutput = templater.Convert(template, exports, out iterationExports);
+                    var markdownedExports = iterationExports
+                        .ToDictionary(kvp => kvp.Key, kvp => markdown.Convert(kvp.Value.ToString()))
+                        .AsTemplateValues();
+                    exports.Merge(markdownedExports);
+                }
             }
             var outputLocation = CreateOutputFileName(inputFileLocation);
             return new TemplateOutput(outputLocation, fileOutput, templateVariableExports);
@@ -39,7 +51,7 @@ namespace Nessie.Services
 
         private FileLocation CreateOutputFileName(FileLocation file)
         {
-            return new FileLocation(file.Directory, file.FileNameWithoutExtension, "html");
+            return new FileLocation(file.Directory, file.FileNameWithoutExtension, ".html");
         }
     }
 }

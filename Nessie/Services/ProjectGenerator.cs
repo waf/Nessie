@@ -12,14 +12,13 @@ namespace Nessie.Services
 {
     using FileReader = Func<string, string>;
     using FileWriter = Action<string, string>;
-    class DirectoryGenerator
+    class ProjectGenerator
     {
-        private readonly static Regex layout = new Regex(@"_(?<category>.+)_.*");
         private readonly FileReader ReadFile;
         private readonly FileWriter WriteFile;
         private readonly FileGenerator fileGenerator;
 
-        public DirectoryGenerator(
+        public ProjectGenerator(
             // poor-man's dependency injection for mocking purposes
             FileReader readFile = null, FileWriter writeFile = null, FileGenerator fileGenerator = null)
         {
@@ -28,9 +27,41 @@ namespace Nessie.Services
             this.fileGenerator = fileGenerator ?? new FileGenerator();
         }
 
+        private IList<FileLocation> GetApplicableTemplates(IList<FileLocation> allTemplates, FileLocation file)
+        {
+
+            // foo/bar/baz/bang
+            // foo/bar/baz/bang
+            // foo/bar/baz
+            // foo/bar
+            // foo/
+            var directories = file.Directory
+                .Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries)
+                .Aggregate(new List<string> { "" },
+                           (list, dir) =>
+                           {
+                               list.Add(Path.Combine(list.Last(), dir));
+                               return list;
+                           })
+                .ToArray();
+
+            var applicableTemplates = from template in allTemplates
+                                      let templateCategory = template.FileNameWithoutExtension.Replace("_template_", "")
+                                      where directories.Contains(template.Directory) &&
+                                        (templateCategory == "" || file.Category == templateCategory)
+                                      orderby template.Directory.Length
+                                      select template;
+
+            return applicableTemplates.ToList();
+        }
+
         public void Generate(string root, IList<string> inputFiles, string outputRoot)
         {
-            string autoContent = ReadFile(Path.Combine(root, "_auto.html"));
+            var files = inputFiles.Select(file => new FileLocation(file)).ToArray();
+
+            var templates = files
+                .Where(file => file.Category == "template")
+                .ToArray();
 
             /* this next statement is a bit tricky, it takes advantage of laziness and a recursive variable definition.
                we want all template variables to be available to all templates when they're rendering.
@@ -40,14 +71,18 @@ namespace Nessie.Services
                     product => _product_x's variables
             */
             Dictionary<string, IBuffer<Hash>> allTemplateVariables = null;
-            allTemplateVariables = inputFiles
-                .Select(file => new FileLocation(file))
+            allTemplateVariables = files
                 .Where(file => file.Extension == ".md")
-                .GroupBy(file => ReadCategoryFromFileName(file)) // this gets the template variable keys available for the templates
+                .GroupBy(file => file.Category) // this gets the template variable keys available for the templates
                 .ToDictionary(
                     fileGroup => fileGroup.Key,
                     fileGroup => fileGroup
-                                    .Select(file => fileGenerator.GenerateFile(file, ReadFile(file.FullyQualifiedName), autoContent, allTemplateVariables))
+                                    .Select(file => fileGenerator.GenerateFile(
+                                        file, 
+                                        ReadFile(file.FullyQualifiedName), 
+                                        GetApplicableTemplates(templates, file).Select(template => ReadFile(template.FullyQualifiedName)).ToArray(), 
+                                        allTemplateVariables)
+                                     )
                                     .Do(outputFile => WriteFileAndDirectories(outputRoot, outputFile.Name, outputFile.Output))
                                     .Select(context => context.Variables)
                                     .Memoize());
@@ -66,17 +101,6 @@ namespace Nessie.Services
             string fullPath = Path.Combine(outputRoot, file.FullyQualifiedName);
             Directory.CreateDirectory(fullDirectory);
             WriteFile(fullPath, output);
-        }
-
-        /// <summary>
-        /// Given a filename of the pattern _foo_xyz, return "foo"
-        /// Or empty string if the filename is some other pattern.
-        /// </summary>
-        /// <param name="file"></param>
-        /// <returns></returns>
-        private static string ReadCategoryFromFileName(FileLocation file)
-        {
-            return layout.Match(file.FileNameWithoutExtension).Groups["category"].Value;
         }
     }
 }
