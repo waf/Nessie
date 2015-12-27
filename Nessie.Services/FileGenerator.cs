@@ -76,7 +76,7 @@ namespace Nessie.Services
                 file.FileNameWithoutExtension :
                 file.FileNameWithoutExtension.Replace($"_{file.Category}_", "");
 
-            return new FileLocation(prefix, filename, ".html");
+            return new FileLocation(prefix, filename, file.Extension == ".md" ? ".html" : file.Extension);
         }
     }
 }

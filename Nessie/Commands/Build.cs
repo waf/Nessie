@@ -11,7 +11,7 @@ namespace Nessie.Commands
 {
     class Build : ConsoleCommand
     {
-        public const string DefaultOutputDirectory = "_output";
+        public const string DefaultOutputDirectory = ".\\_output";
         private string source;
         private string destination;
 
@@ -19,17 +19,19 @@ namespace Nessie.Commands
         {
             this.source = ".";
             this.destination = DefaultOutputDirectory;
-            IsCommand("build", "generates the static site.");
-            HasOption("s|source=", "the source directory.\ndefaults to the current working directory", 
-                input => source = input);
-            HasOption("d|dest=", $"the destination directory.\ndefaults to '{DefaultOutputDirectory}'", 
-                input => destination = input);
+
+            IsCommand("build", "generates the static site");
         }
 
         public override int Run(string[] arguments)
         {
             var files = Directory
                 .GetFiles(source, "*", SearchOption.AllDirectories)
+                .Where(file => {
+                    bool isHiddenFile = new FileInfo(file).Attributes.HasFlag(FileAttributes.Hidden);
+                    bool isOutputFile = file.StartsWith(DefaultOutputDirectory);
+                    return !(isHiddenFile || isOutputFile);
+                 })
                 .ToList();
 
             var generator = new ProjectGenerator();

@@ -17,7 +17,9 @@ namespace Nessie.Services
         private readonly FileReaderFunction ReadFile;
         private readonly FileWriterFunction WriteFile;
         private readonly FileGenerator fileGenerator;
-
+        private static readonly string[] FileTypesToTransform = {
+            ".md", ".json", ".xml", ".txt", ".html"
+        };
         public ProjectGenerator(
             // poor-man's dependency injection for mocking purposes
             FileReaderFunction readFile = null, FileWriterFunction writeFile = null, FileGenerator fileGenerator = null)
@@ -57,38 +59,62 @@ namespace Nessie.Services
 
         public void Generate(string root, IList<string> inputFiles, string outputRoot)
         {
-            var files = inputFiles.Select(file => new FileLocation(file)).ToArray();
+            // split file list into templates vs non-templates   
+            var isTemplateFile = inputFiles
+                .Select(file => new FileLocation(file))
+                .ToLookup(file => file.Category == "template");
+            var templates = isTemplateFile[true].ToArray();
+            var files = isTemplateFile[false].ToArray();
 
-            var templates = files
-                .Where(file => file.Category == "template")
-                .ToArray();
+            // split non-templates into "files to transform" vs "files to copy"
+            var transformableFiles = files
+                .ToLookup(file => FileTypesToTransform.Contains(file.Extension));
 
+            // transform the "files to transform", passing in the templates
+            TransformFiles(outputRoot, transformableFiles[true].ToArray(), templates);
+
+            // just copy the files we can't handle to the output root
+            CopyFiles(outputRoot, transformableFiles[false].ToArray());
+        }
+
+        private static void CopyFiles(string outputRoot, FileLocation[] files)
+        {
+            foreach (var file in files)
+            {
+                string targetLocation = CombineRelativePaths(outputRoot, file.FullyQualifiedName);
+                Console.WriteLine($"Copying {targetLocation}");
+                File.Copy(file.FullyQualifiedName, targetLocation, true);
+            }
+        }
+
+        private void TransformFiles(string outputRoot, FileLocation[] files, FileLocation[] templates)
+        {
             /* this next statement is a bit tricky, it takes advantage of laziness and a recursive variable definition.
-               we want all template variables to be available to all templates when they're rendering.
+               we want all file variables to be available to all other files when they're rendering.
 
                given files _post_a.md, _post_b.md, _product_x.md, it will generate a dictionary:
                     post => _post_a.md's variables, _post_b.md's variables
                     product => _product_x's variables
             */
-            Dictionary<string, IBuffer<Hash>> allTemplateVariables = null;
-            allTemplateVariables = files
-                .Except(templates)
+            Dictionary<string, IBuffer<Hash>> allFileVariables = null;
+            allFileVariables = files
+                .Where(file => FileTypesToTransform.Contains(file.Extension))
                 .GroupBy(file => file.Category) // this gets the template variable keys available for the templates
                 .ToDictionary(
                     fileGroup => fileGroup.Key,
                     fileGroup => fileGroup
                                     .Select(file => fileGenerator.GenerateFile(
-                                        file, 
-                                        ReadFile(file.FullyQualifiedName), 
-                                        GetApplicableTemplates(templates, file).Select(template => ReadFile(template.FullyQualifiedName)).ToArray(), 
-                                        allTemplateVariables)
+                                        file,
+                                        ReadFile(file.FullyQualifiedName),
+                                        GetApplicableTemplates(templates, file).Select(template => ReadFile(template.FullyQualifiedName)).ToArray(),
+                                        allFileVariables)
                                      )
                                     .Do(outputFile => WriteFileAndDirectories(outputRoot, outputFile.Name, outputFile.Output))
                                     .Select(context => context.Variables)
                                     .Memoize());
 
             // evaluate the lazy values in the dictionary, to generate all the files.
-            foreach (var item in allTemplateVariables)
+            foreach (var item in allFileVariables)
             {
                 item.Value.ToList();
             }
@@ -96,14 +122,20 @@ namespace Nessie.Services
 
         private void WriteFileAndDirectories(string outputRoot, FileLocation file, string output)
         {
-            string directory = Path
-                .GetFullPath(Path.Combine(outputRoot, file.Directory))
-                .Replace(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar, "");
+            string directory = CombineRelativePaths(outputRoot, file.Directory);
             Directory.CreateDirectory(directory);
 
             string filePath = Path.Combine(directory, file.FileNameWithoutExtension + file.Extension);
             Console.WriteLine($"Generating {filePath}");
             WriteFile(filePath, output);
+        }
+
+        private static string CombineRelativePaths(string path1, string path2)
+        {
+            // is there a better way to do this? feels like a kludge
+            return Path
+                .GetFullPath(Path.Combine(path1, path2))
+                .Replace(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar, "");
         }
     }
 }
