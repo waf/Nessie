@@ -19,10 +19,10 @@ namespace Nessie.Commands
         {
             this.source = ".";
             this.destination = DefaultOutputDirectory;
-            IsCommand("build", "generates the static site");
-            HasOption("s|source=", "the source directory. defaults to the current working directory", 
+            IsCommand("build", "generates the static site.");
+            HasOption("s|source=", "the source directory.\ndefaults to the current working directory", 
                 input => source = input);
-            HasOption("d|dest=", $"the destination directory. defaults to '{DefaultOutputDirectory}'", 
+            HasOption("d|dest=", $"the destination directory.\ndefaults to '{DefaultOutputDirectory}'", 
                 input => destination = input);
         }
 
