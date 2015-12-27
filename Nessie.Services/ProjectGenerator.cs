@@ -83,6 +83,7 @@ namespace Nessie.Services
             {
                 string targetLocation = CombineRelativePaths(outputRoot, file.FullyQualifiedName);
                 Console.WriteLine($"Copying {targetLocation}");
+                Directory.CreateDirectory(Path.GetDirectoryName(targetLocation));
                 File.Copy(file.FullyQualifiedName, targetLocation, true);
             }
         }
@@ -122,6 +123,10 @@ namespace Nessie.Services
 
         private void WriteFileAndDirectories(string outputRoot, FileLocation file, string output)
         {
+            if(string.IsNullOrWhiteSpace(output))
+            {
+                return;
+            }
             string directory = CombineRelativePaths(outputRoot, file.Directory);
             Directory.CreateDirectory(directory);
 

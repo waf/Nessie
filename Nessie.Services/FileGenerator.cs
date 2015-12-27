@@ -54,7 +54,11 @@ namespace Nessie.Services
                     Hash iterationExports;
                     fileContents = templater.Convert(template, exports, out iterationExports);
                     exports.Merge(iterationExports);
-                    if (!string.IsNullOrWhiteSpace(fileContents))
+
+                    if (fileContents.Count() < template.Count())
+                    {
+                        fileContents = String.Empty;
+                    } else if (!string.IsNullOrWhiteSpace(fileContents))
                     {
                         break;
                     }
