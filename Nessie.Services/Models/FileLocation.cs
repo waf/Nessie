@@ -35,9 +35,16 @@ namespace Nessie
         }
 
         public string Directory { get; private set; }
-        public string Extension { get; private set; }
+
         public string FileNameWithoutExtension { get; private set; }
+
+        /// <summary>
+        /// File extension, with the leading period.
+        /// </summary>
+        public string Extension { get; private set; }
+
         public string FullyQualifiedName { get; private set; }
+
         public string Category { get; private set; }
 
         public override string ToString()

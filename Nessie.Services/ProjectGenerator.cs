@@ -10,17 +10,17 @@ using System.Threading.Tasks;
 
 namespace Nessie.Services
 {
-    using FileReader = Func<string, string>;
-    using FileWriter = Action<string, string>;
+    using FileReaderFunction = Func<string, string>;
+    using FileWriterFunction = Action<string, string>;
     public class ProjectGenerator
     {
-        private readonly FileReader ReadFile;
-        private readonly FileWriter WriteFile;
+        private readonly FileReaderFunction ReadFile;
+        private readonly FileWriterFunction WriteFile;
         private readonly FileGenerator fileGenerator;
 
         public ProjectGenerator(
             // poor-man's dependency injection for mocking purposes
-            FileReader readFile = null, FileWriter writeFile = null, FileGenerator fileGenerator = null)
+            FileReaderFunction readFile = null, FileWriterFunction writeFile = null, FileGenerator fileGenerator = null)
         {
             this.ReadFile = readFile ?? File.ReadAllText;
             this.WriteFile = writeFile ?? File.WriteAllText;
@@ -29,12 +29,12 @@ namespace Nessie.Services
 
         private IList<FileLocation> GetApplicableTemplates(IList<FileLocation> allTemplates, FileLocation file)
         {
+            // only markdown files have templates applied to them
+            if(file.Extension != ".md")
+            {
+                return new List<FileLocation>();
+            }
 
-            // foo/bar/baz/bang
-            // foo/bar/baz/bang
-            // foo/bar/baz
-            // foo/bar
-            // foo/
             var directories = file.Directory
                 .Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries)
                 .Aggregate(new List<string> { "" },
@@ -72,7 +72,7 @@ namespace Nessie.Services
             */
             Dictionary<string, IBuffer<Hash>> allTemplateVariables = null;
             allTemplateVariables = files
-                .Where(file => file.Extension == ".md")
+                .Except(templates)
                 .GroupBy(file => file.Category) // this gets the template variable keys available for the templates
                 .ToDictionary(
                     fileGroup => fileGroup.Key,
@@ -96,12 +96,14 @@ namespace Nessie.Services
 
         private void WriteFileAndDirectories(string outputRoot, FileLocation file, string output)
         {
-            string fullDirectory = Path.GetFullPath(Path.Combine(outputRoot, file.Directory));
-            string fullPath = Path.GetFullPath(Path.Combine(outputRoot, file.FullyQualifiedName));
-            Directory.CreateDirectory(fullDirectory);
-            string displayPath = fullPath.Replace(Directory.GetCurrentDirectory(), "");
-            Console.WriteLine($"Generating {displayPath}");
-            WriteFile(fullPath, output);
+            string directory = Path
+                .GetFullPath(Path.Combine(outputRoot, file.Directory))
+                .Replace(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar, "");
+            Directory.CreateDirectory(directory);
+
+            string filePath = Path.Combine(directory, file.FileNameWithoutExtension + file.Extension);
+            Console.WriteLine($"Generating {filePath}");
+            WriteFile(filePath, output);
         }
     }
 }

@@ -22,12 +22,27 @@ namespace Nessie.Services
         public FileOutput GenerateFile(FileLocation inputFileLocation, string inputContent, string[] templates, Dictionary<string, IBuffer<Hash>> projectVariables)
         {
             Hash fileVariables;
+            
+            // all files are transformed by the templater
             string fileOutput = templater.Convert(inputContent, projectVariables.AsTemplateValues(), out fileVariables);
-            if (!string.IsNullOrWhiteSpace(fileOutput))
+
+            // markdown files get some additional processing
+            if (inputFileLocation.Extension == ".md")
             {
-                fileOutput = markdown.Convert(fileOutput);
+                fileOutput = TransformMarkdownFile(fileOutput, projectVariables, fileVariables, templates);
             }
-            else //empty output, so the file just exported variables. run the variables through the templates
+
+            var outputLocation = CreateOutputFileName(inputFileLocation, fileVariables);
+            return new FileOutput(outputLocation, fileOutput, fileVariables);
+        }
+
+        private string TransformMarkdownFile(string fileContents, Dictionary<string, IBuffer<Hash>> projectVariables, Hash fileVariables, string[] templates)
+        {
+            if (!string.IsNullOrWhiteSpace(fileContents))
+            {
+                fileContents = markdown.Convert(fileContents);
+            }
+            else //empty output, so the file just exported variables. run the variables through the html templates until we get output
             {
                 Hash exports = fileVariables
                     .ToDictionary(kvp => kvp.Key, kvp => markdown.Convert(kvp.Value.ToString()))
@@ -37,18 +52,17 @@ namespace Nessie.Services
                 foreach (var template in templates)
                 {
                     Hash iterationExports;
-                    fileOutput = templater.Convert(template, exports, out iterationExports);
+                    fileContents = templater.Convert(template, exports, out iterationExports);
                     exports.Merge(iterationExports);
-                    if (!string.IsNullOrWhiteSpace(fileOutput))
+                    if (!string.IsNullOrWhiteSpace(fileContents))
                     {
                         break;
                     }
                 }
             }
-            var outputLocation = CreateOutputFileName(inputFileLocation, fileVariables);
-            return new FileOutput(outputLocation, fileOutput, fileVariables);
-        }
 
+            return fileContents;
+        }
 
         private FileLocation CreateOutputFileName(FileLocation file, Hash variables)
         {
