@@ -11,7 +11,7 @@ namespace Nessie.Services
     /// <summary>
     /// Liquid template converter, using DotLiquid library
     /// </summary>
-    class TemplateConverter
+    public class TemplateConverter
     {
         /// <summary>
         /// Run the liquid templates.

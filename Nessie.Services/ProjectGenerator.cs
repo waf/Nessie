@@ -12,7 +12,7 @@ namespace Nessie.Services
 {
     using FileReader = Func<string, string>;
     using FileWriter = Action<string, string>;
-    class ProjectGenerator
+    public class ProjectGenerator
     {
         private readonly FileReader ReadFile;
         private readonly FileWriter WriteFile;
@@ -90,16 +90,17 @@ namespace Nessie.Services
             // evaluate the lazy values in the dictionary, to generate all the files.
             foreach (var item in allTemplateVariables)
             {
-                Console.WriteLine("Evaluating " + item.Key);
                 item.Value.ToList();
             }
         }
 
         private void WriteFileAndDirectories(string outputRoot, FileLocation file, string output)
         {
-            string fullDirectory = Path.Combine(outputRoot, file.Directory);
-            string fullPath = Path.Combine(outputRoot, file.FullyQualifiedName);
+            string fullDirectory = Path.GetFullPath(Path.Combine(outputRoot, file.Directory));
+            string fullPath = Path.GetFullPath(Path.Combine(outputRoot, file.FullyQualifiedName));
             Directory.CreateDirectory(fullDirectory);
+            string displayPath = fullPath.Replace(Directory.GetCurrentDirectory(), "");
+            Console.WriteLine($"Generating {displayPath}");
             WriteFile(fullPath, output);
         }
     }

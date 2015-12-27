@@ -55,9 +55,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Nessie\Nessie.csproj">
-      <Project>{c609e6de-ec4d-4626-9220-e5979151340d}</Project>
-      <Name>Nessie</Name>
+    <ProjectReference Include="..\Nessie.Services\Nessie.Services.csproj">
+      <Project>{7409500d-f198-4ecc-930a-f7b202555344}</Project>
+      <Name>Nessie.Services</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>

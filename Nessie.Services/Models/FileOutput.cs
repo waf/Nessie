@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace Nessie
 {
-    class TemplateOutput
+    public class FileOutput
     {
-        public TemplateOutput(FileLocation name, string output, Hash variables)
+        public FileOutput(FileLocation name, string output, Hash variables)
         {
             this.Name = name;
             this.Variables = variables;

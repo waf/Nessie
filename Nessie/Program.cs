@@ -1,4 +1,4 @@
-﻿using DotLiquid;
+﻿using ManyConsole;
 using Nessie.Services;
 using System;
 using System.Collections.Generic;
@@ -13,15 +13,9 @@ namespace Nessie
     {
         static void Main(string[] args)
         {
-            string root = "example";
-            var files = Directory
-                .GetFiles(root, "*", SearchOption.AllDirectories)
-                .ToList();
-
-            var generator = new ProjectGenerator();
-            generator.Generate(root, files, "_output2");
-            Console.WriteLine("done");
-            Console.ReadKey();
+            // scan this assembly for subclasses of ConsoleCommand, and register them as command-line options
+            var commands = ConsoleCommandDispatcher.FindCommandsInSameAssemblyAs(typeof(Program));
+            ConsoleCommandDispatcher.DispatchCommand(commands, args, Console.Out);
         }
     }
 }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Nessie.Services
 {
-    class FileGenerator
+    public class FileGenerator
     {
         private readonly TemplateConverter templater;
         private readonly MarkdownConverter markdown;
@@ -19,7 +19,7 @@ namespace Nessie.Services
             this.markdown = markdown ?? new MarkdownConverter();
         }
 
-        public TemplateOutput GenerateFile(FileLocation inputFileLocation, string inputContent, string[] templates, Dictionary<string, IBuffer<Hash>> projectVariables)
+        public FileOutput GenerateFile(FileLocation inputFileLocation, string inputContent, string[] templates, Dictionary<string, IBuffer<Hash>> projectVariables)
         {
             Hash fileVariables;
             string fileOutput = templater.Convert(inputContent, projectVariables.AsTemplateValues(), out fileVariables);
@@ -46,7 +46,7 @@ namespace Nessie.Services
                 }
             }
             var outputLocation = CreateOutputFileName(inputFileLocation, fileVariables);
-            return new TemplateOutput(outputLocation, fileOutput, fileVariables);
+            return new FileOutput(outputLocation, fileOutput, fileVariables);
         }
 
 

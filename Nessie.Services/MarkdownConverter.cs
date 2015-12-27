@@ -11,7 +11,7 @@ namespace Nessie.Services
     /// <summary>
     /// Markdown converter, using MarkdownDeep
     /// </summary>
-    class MarkdownConverter
+    public class MarkdownConverter
     {
         private static Markdown Markdown = new Markdown
         {
@@ -21,7 +21,7 @@ namespace Nessie.Services
             MarkdownInHtml = true,
         };
 
-        internal string Convert(string input)
+        public string Convert(string input)
         {
             string html = Markdown.Transform(input).Trim();
             return html;
