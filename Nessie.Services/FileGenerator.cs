@@ -45,7 +45,14 @@ namespace Nessie.Services
             else //empty output, so the file just exported variables. run the variables through the html templates until we get output
             {
                 Hash exports = fileVariables
-                    .ToDictionary(kvp => kvp.Key, kvp => markdown.Convert(kvp.Value.ToString()))
+                    .ToDictionary(kvp => kvp.Key, kvp =>
+                    {
+                        string markdownText = kvp.Value.ToString();
+                        string html = markdown.Convert(kvp.Value.ToString()).Trim();
+                        return markdownText.Trim().Length == markdownText.Length ? // if the input text has no wrapping whitespace
+                                html.Substring(3, html.Length - 7) : // then trim wrapping paragraph tags
+                                html;
+                    })
                     .AsTemplateValues();
                 exports.Merge(projectVariables.AsTemplateValues());
 
@@ -54,11 +61,7 @@ namespace Nessie.Services
                     Hash iterationExports;
                     fileContents = templater.Convert(template, exports, out iterationExports);
                     exports.Merge(iterationExports);
-
-                    if (fileContents.Count() < template.Count())
-                    {
-                        fileContents = String.Empty;
-                    } else if (!string.IsNullOrWhiteSpace(fileContents))
+                    if (!string.IsNullOrWhiteSpace(fileContents))
                     {
                         break;
                     }
