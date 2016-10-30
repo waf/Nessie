@@ -2,6 +2,7 @@
 using Nessie.Services;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -25,6 +26,7 @@ namespace Nessie.Commands
 
         public override int Run(string[] arguments)
         {
+            var timer = Stopwatch.StartNew();
             var files = Directory
                 .GetFiles(source, "*", SearchOption.AllDirectories)
                 .Where(file => {
@@ -37,6 +39,7 @@ namespace Nessie.Commands
             var generator = new ProjectGenerator();
             generator.Generate(source, files, destination);
 
+            Console.WriteLine($"Built site in {timer.ElapsedMilliseconds} milliseconds");
             return 0;
         }
     }

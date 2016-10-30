@@ -22,7 +22,6 @@ namespace Nessie.Services
         public FileOutput GenerateFile(FileLocation inputFileLocation, string inputContent, string[] templates, Dictionary<string, IBuffer<Hash>> projectVariables)
         {
             Hash fileVariables;
-            
             // all files are transformed by the templater
             string fileOutput = templater.Convert(inputContent, projectVariables.AsTemplateValues(), out fileVariables);
 
@@ -36,6 +35,8 @@ namespace Nessie.Services
             return new FileOutput(outputLocation, fileOutput, fileVariables);
         }
 
+        static readonly char[] NewLines =  { '\r', '\n' };
+
         private string TransformMarkdownFile(string fileContents, Dictionary<string, IBuffer<Hash>> projectVariables, Hash fileVariables, string[] templates)
         {
             if (!string.IsNullOrWhiteSpace(fileContents))
@@ -48,8 +49,8 @@ namespace Nessie.Services
                     .ToDictionary(kvp => kvp.Key, kvp =>
                     {
                         string markdownText = kvp.Value.ToString();
-                        string html = markdown.Convert(kvp.Value.ToString()).Trim();
-                        return markdownText.Trim().Length == markdownText.Length ? // if the input text has no wrapping whitespace
+                        string html = markdown.Convert(markdownText).Trim(NewLines);
+                        return markdownText.Trim(NewLines).Length == markdownText.Length ? // if the input text has no wrapping whitespace
                                 html.Substring(3, html.Length - 7) : // then trim wrapping paragraph tags
                                 html;
                     })
