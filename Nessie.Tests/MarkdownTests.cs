@@ -13,7 +13,7 @@ namespace Nessie.Tests
             var markdown = new MarkdownConverter();
             var result = markdown.Convert("- I'm a list item.\n- I'm another one.");
             Assert.AreEqual(
-                "<ul>\n<li>I'm a list item.</li>\n<li>I'm another one.</li>\n</ul>",
+                "<ul>\r\n<li>I'm a list item.</li>\r\n<li>I'm another one.</li>\r\n</ul>\r\n",
                 result);
         }
     }

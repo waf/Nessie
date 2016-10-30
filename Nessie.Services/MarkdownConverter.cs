@@ -1,8 +1,9 @@
-﻿using MarkdownDeep;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -13,18 +14,36 @@ namespace Nessie.Services
     /// </summary>
     public class MarkdownConverter
     {
-        private static Markdown Markdown = new Markdown
-        {
-            ExtraMode = true,
-            SafeMode = false,
-            AutoHeadingIDs = true,
-            MarkdownInHtml = true,
-        };
+        private static string PandocLocation;
 
-        public string Convert(string input)
+        static MarkdownConverter()
         {
-            string html = Markdown.Transform(input).Trim();
-            return html;
+            PandocLocation =
+                Path.Combine(
+                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
+                    @"lib\pandoc.exe"
+                );
+        }
+
+        public string Convert(string source)
+        {
+            string args = "-f markdown -t html";
+            Process p = new Process
+            {
+                StartInfo = new ProcessStartInfo(PandocLocation, args)
+                {
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false
+                }
+            };
+            p.Start();
+
+            p.StandardInput.Write(source);
+            p.StandardInput.Close();
+            p.WaitForExit(2000);
+
+            return p.StandardOutput.ReadToEnd();
         }
     }
 }
