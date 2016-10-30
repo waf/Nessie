@@ -1,5 +1,4 @@
 ﻿using DotLiquid;
-using MarkdownDeep;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,6 +36,19 @@ namespace Nessie.Services
                 return new List<FileLocation>();
             }
 
+            var templatesWithCategory = (from template in allTemplates
+                                         select new
+                                         {
+                                             template,
+                                             category = template.FileNameWithoutExtension.Replace("_template_", "")
+                                         }).ToArray();
+            // if this file has a category, but there's no associated template, don't return any templates.
+            // this prevents a item/_item_foo.md being rendered with a top-level template in a parent directory.
+            if(file.Category != string.Empty && templatesWithCategory.Last().category != file.Category)
+            {
+                return new List<FileLocation>();
+            }
+
             var directories = file.Directory
                 .Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries)
                 .Aggregate(new List<string> { "" },
@@ -47,12 +59,11 @@ namespace Nessie.Services
                            })
                 .ToArray();
 
-            var applicableTemplates = from template in allTemplates
-                                      let templateCategory = template.FileNameWithoutExtension.Replace("_template_", "")
-                                      where directories.Contains(template.Directory) &&
-                                        (templateCategory == "" || file.Category == templateCategory)
-                                      orderby template.FullyQualifiedName.Length descending
-                                      select template;
+            var applicableTemplates = (from template in templatesWithCategory
+                                       where directories.Contains(template.template.Directory) &&
+                                         (template.category == "" || file.Category == template.category)
+                                       orderby template.template.FullyQualifiedName.Length descending
+                                       select template.template).ToList();
 
             return applicableTemplates.ToList();
         }
