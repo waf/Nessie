@@ -36,7 +36,7 @@ namespace Nessie.Commands
                  })
                 .ToList();
 
-            var generator = new ProjectGenerator();
+            var generator = new ProjectGenerator(source);
             generator.Generate(source, files, destination);
 
             Console.WriteLine($"Built site in {timer.ElapsedMilliseconds} milliseconds");

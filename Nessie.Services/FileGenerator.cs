@@ -13,9 +13,9 @@ namespace Nessie.Services
         private readonly TemplateConverter templater;
         private readonly MarkdownConverter markdown;
 
-        public FileGenerator(TemplateConverter templater = null, MarkdownConverter markdown = null)
+        public FileGenerator(string inputRoot, TemplateConverter templater = null, MarkdownConverter markdown = null)
         {
-            this.templater = templater ?? new TemplateConverter();
+            this.templater = templater ?? new TemplateConverter(inputRoot);
             this.markdown = markdown ?? new MarkdownConverter();
         }
 

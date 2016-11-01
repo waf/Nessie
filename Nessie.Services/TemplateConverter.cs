@@ -1,4 +1,5 @@
 ﻿using DotLiquid;
+using DotLiquid.FileSystems;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,6 +14,11 @@ namespace Nessie.Services
     /// </summary>
     public class TemplateConverter
     {
+        public TemplateConverter(string inputRoot)
+        {
+            string absoluteRoot = Path.GetFullPath(inputRoot);
+            Template.FileSystem = new NessieLiquidFileSystem(absoluteRoot);
+        }
         /// <summary>
         /// Run the liquid templates.
         /// An input file may export variables for other templates. These variables are returned as a Hash.

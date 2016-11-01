@@ -20,12 +20,13 @@ namespace Nessie.Services
             ".md", ".json", ".xml", ".txt", ".html"
         };
         public ProjectGenerator(
+            string inputRoot,
             // poor-man's dependency injection for mocking purposes
             FileReaderFunction readFile = null, FileWriterFunction writeFile = null, FileGenerator fileGenerator = null)
         {
             this.ReadFile = readFile ?? File.ReadAllText;
             this.WriteFile = writeFile ?? File.WriteAllText;
-            this.fileGenerator = fileGenerator ?? new FileGenerator();
+            this.fileGenerator = fileGenerator ?? new FileGenerator(inputRoot);
         }
 
         private IList<FileLocation> GetApplicableTemplates(IList<FileLocation> allTemplates, FileLocation file)

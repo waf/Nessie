@@ -52,6 +52,7 @@
     <Compile Include="MarkdownConverter.cs" />
     <Compile Include="Models\FileLocation.cs" />
     <Compile Include="Models\FileOutput.cs" />
+    <Compile Include="NessieLiquidFileSystem.cs" />
     <Compile Include="ProjectGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TemplateConverter.cs" />
