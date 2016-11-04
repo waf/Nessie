@@ -18,7 +18,7 @@ namespace Nessie.Tests
         [TestInitialize]
         public void Setup()
         {
-            this.generator = new ProjectGenerator(
+            this.generator = new ProjectGenerator(null,
                 readFile: name => filesToRead[name],
                 writeFile: (name, contents) => writtenFiles[name] = contents);
         }

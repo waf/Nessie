@@ -45,7 +45,7 @@ namespace Nessie.Services
                                          }).ToArray();
             // if this file has a category, but there's no associated template, don't return any templates.
             // this prevents a item/_item_foo.md being rendered with a top-level template in a parent directory.
-            if(file.Category != string.Empty && templatesWithCategory.Last().category != file.Category)
+            if(!templatesWithCategory.Any() || (file.Category != string.Empty && templatesWithCategory.Last().category != file.Category))
             {
                 return new List<FileLocation>();
             }
