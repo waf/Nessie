@@ -7,10 +7,10 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Nessie.Services
+namespace Nessie.Services.Converters
 {
     /// <summary>
-    /// Markdown converter, using MarkdownDeep
+    /// Markdown converter, using Pandoc
     /// </summary>
     public class MarkdownConverter
     {
@@ -18,11 +18,11 @@ namespace Nessie.Services
 
         static MarkdownConverter()
         {
-            PandocLocation =
-                Path.Combine(
-                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                    @"lib\pandoc.exe"
+            string currentDirectory =
+                Path.GetDirectoryName(
+                    typeof(MarkdownConverter).GetTypeInfo().Assembly.Location
                 );
+            PandocLocation = Path.Combine(currentDirectory, @"lib\pandoc.exe");
         }
 
         public string Convert(string source)
@@ -40,7 +40,7 @@ namespace Nessie.Services
             p.Start();
 
             p.StandardInput.Write(source);
-            p.StandardInput.Close();
+            p.StandardInput.Dispose();
             p.WaitForExit(2000);
 
             return p.StandardOutput.ReadToEnd();

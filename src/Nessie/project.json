@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "emitEntryPoint": true,
+    "copyToOutput": {
+      "mappings": {
+        "lib/pandoc.exe": "../Nessie.Services/lib/pandoc.exe"
+      }
+    }
+  },
+
+  "dependencies": {
+    "Microsoft.AspNetCore.StaticFiles": "1.0.0",
+    "Microsoft.AspNetCore.Server.Kestrel": "1.0.1",
+    "Microsoft.NETCore.App": {
+      "type": "platform",
+      "version": "1.0.1"
+    },
+    "Nessie.Services": "1.0.0-*",
+    "System.CommandLine": "0.1.0-e161110-1"
+  },
+
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": "dnxcore50"
+    }
+  }
+}

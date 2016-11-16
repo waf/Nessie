@@ -1,4 +1,5 @@
 ﻿using DotLiquid;
+using Nessie.Services.Converters;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace Nessie.Services
 {
+    /// <summary>
+    /// Processes a single file.
+    /// </summary>
     public class FileGenerator
     {
         private readonly TemplateConverter templater;
@@ -74,10 +78,10 @@ namespace Nessie.Services
 
         private FileLocation CreateOutputFileName(FileLocation file, Hash variables)
         {
-            object outputPattern;
+            string outputPattern;
             string prefix =
-                variables.TryGetValue("nessie-url-prefix", out outputPattern) ?
-                templater.Convert((string)outputPattern, variables) :
+                variables.TryGetVariable("nessie-url-prefix", out outputPattern) ?
+                templater.Convert(outputPattern, variables) :
                 file.Directory;
 
             string filename = file.Category == "" ?

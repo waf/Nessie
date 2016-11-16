@@ -22,5 +22,13 @@ namespace Nessie
             var objectDictionary = templateValues.ToDictionary(k => k.Key, k => (object)k.Value);
             return Hash.FromDictionary(objectDictionary);
         }
+
+        public static bool TryGetVariable(this Hash hash, string key, out string value)
+        {
+            object result;
+            var success = hash.TryGetValue(key, out result);
+            value = success ? (string)result : null;
+            return success;
+        }
     }
 }

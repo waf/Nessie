@@ -1,37 +1,28 @@
-﻿using ManyConsole;
-using Nessie.Services;
+﻿using Nessie.Services;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.CommandLine;
 
 namespace Nessie.Commands
 {
-    class Build : ConsoleCommand
+    class BuildCommand : ICommand
     {
+        // TODO: these should be configurable via command line flags
+        public string Name => "build";
         public const string DefaultOutputDirectory = ".\\_output";
-        private string source;
-        private string destination;
+        static string source = ".";
+        static string destination = DefaultOutputDirectory;
 
-        public Build()
-        {
-            this.source = ".";
-            this.destination = DefaultOutputDirectory;
-
-            IsCommand("build", "generates the static site");
-        }
-
-        public override int Run(string[] arguments)
+        public int Run()
         {
             var timer = Stopwatch.StartNew();
             var files = Directory
                 .GetFiles(source, "*", SearchOption.AllDirectories)
                 .Where(file => {
                     bool isHiddenFile = new FileInfo(file).Attributes.HasFlag(FileAttributes.Hidden);
-                    bool isOutputFile = file.StartsWith(DefaultOutputDirectory);
+                    bool isOutputFile = file.StartsWith(DefaultOutputDirectory, StringComparison.CurrentCulture);
                     return !(isHiddenFile || isOutputFile);
                  })
                 .ToList();
@@ -41,6 +32,11 @@ namespace Nessie.Commands
 
             Console.WriteLine($"Built site in {timer.ElapsedMilliseconds} milliseconds");
             return 0;
+        }
+
+        public void DefineArguments(ArgumentSyntax syntax, ref string command)
+        {
+            syntax.DefineCommand(Name, ref command, "generates the static site");
         }
     }
 }

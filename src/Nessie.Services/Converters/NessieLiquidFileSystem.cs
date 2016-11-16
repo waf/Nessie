@@ -16,7 +16,7 @@ namespace Nessie.Services
     /// File names are automatically prefixed with '_partial_'
     /// For security reasons, template paths are only allowed to contain letters, numbers, and underscore.
     ///
-    /// Example:
+    /// Example (from original ruby implementation):
     ///
     /// file_system = Liquid::LocalFileSystem.new("/some/path")
     ///
@@ -26,6 +26,7 @@ namespace Nessie.Services
     class NessieLiquidFileSystem : IFileSystem
     {
         public string Root { get; set; }
+        private const string FilePrefix = "_partial_";
 
         public NessieLiquidFileSystem(string root)
         {
@@ -40,15 +41,16 @@ namespace Nessie.Services
                 throw new FileSystemException("Template not found", templatePath);
             return File.ReadAllText(fullPath);
         }
+        private static Regex TemplatePathValidator = new Regex(@"^[^.\/][a-zA-Z0-9_\/]+\.?[a-zA-Z0-9_]*$");
 
-        public string FullPath(string templatePath)
+        private string FullPath(string templatePath)
         {
-            if (templatePath == null || !Regex.IsMatch(templatePath, @"^[^.\/][a-zA-Z0-9_\/]+\.?[a-zA-Z0-9_]*$"))
+            if (templatePath == null || !TemplatePathValidator.IsMatch(templatePath))
             {
                 throw new FileSystemException("Illegal template path", templatePath);
             }
 
-            string fullPath = templatePath.Contains("/")
+            string fullPath = templatePath.Contains(Path.DirectorySeparatorChar)
                 ? Path.Combine(Path.Combine(Root, Path.GetDirectoryName(templatePath)), string.Format("_partial_{0}", Path.GetFileName(templatePath)))
                 : Path.Combine(Root, string.Format("_partial_{0}", templatePath));
 
