@@ -1,13 +1,20 @@
 ﻿{
   "version": "1.0.0-*",
-
   "testRunner": "mstest",
+  "buildOptions": {
+    "copyToOutput": {
+      "mappings": {
+        "lib/pandoc.exe": "../../src/Nessie.Services/lib/pandoc.exe"
+      }
+    }
+  },
+
   "dependencies": {
     "dotnet-test-mstest": "1.1.1-preview",
     "MSTest.TestFramework": "1.0.1-preview",
     "Nessie.Services": "1.0.0-*"
   },
-
+  
   "frameworks": {
     "netcoreapp1.0": {
       "imports": [
