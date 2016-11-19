@@ -16,13 +16,11 @@ namespace Nessie.Commands
 
         int port;
         bool browse;
-        bool watch;
 
         public void DefineArguments(ArgumentSyntax syntax, ref string command)
         {
             syntax.DefineCommand(Name, ref command, "runs a local development HTTP server");
             port = syntax.DefineOption("p|port", 8080, "the port to use for the http server. Defaults to 8080").Value;
-            watch = syntax.DefineOption("w|watch", false, "watch the filesystem for changes and rebuild").Value;
             browse = syntax.DefineOption("b|browse", false, "launch the system default browser.").Value;
         }
 
@@ -32,20 +30,13 @@ namespace Nessie.Commands
             using (var server = RunWebServer(url))
             {
                 server.Start();
-                new BuildCommand().Run();
+                Console.WriteLine("Listening at " + url);
 
                 if (browse)
                 {
-                    Console.WriteLine("Launch system browser");
                     RunWebBrowser(url);
                 }
-                if (watch)
-                {
-                    Console.WriteLine("Watching for file changes");
-                    RunFileWatcher();
-                }
 
-                Console.WriteLine("Listening at " + url);
                 Console.WriteLine("Press any key to quit.");
                 Console.ReadKey();
             }
@@ -54,9 +45,10 @@ namespace Nessie.Commands
 
         private void RunWebBrowser(string url)
         {
+            Console.WriteLine("Launching system browser");
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                Process.Start(new ProcessStartInfo("cmd", $"/c start {url}")); // Works ok on windows
+                Process.Start(new ProcessStartInfo("cmd", $"/c start {url}"));
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -70,7 +62,7 @@ namespace Nessie.Commands
 
         private IWebHost RunWebServer(string url)
         {
-            string serverRoot = Path.Combine(Directory.GetCurrentDirectory(), BuildCommand.DefaultOutputDirectory);
+            string serverRoot = Path.Combine(Directory.GetCurrentDirectory(), BuildCommand.OutputDirectory);
             Directory.CreateDirectory(serverRoot);
             return new WebHostBuilder()
                 .UseContentRoot(serverRoot)
@@ -90,34 +82,6 @@ namespace Nessie.Commands
                 .UseKestrel()
                 .UseUrls(url)
                 .Build();
-        }
-
-        private void RunFileWatcher()
-        {
-            var watcher = new FileSystemWatcher();
-            watcher.IncludeSubdirectories = true;
-            watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
-            watcher.Path = Directory.GetCurrentDirectory();
-            watcher.Changed += (sender, e) => {
-                watcher.EnableRaisingEvents = false;
-
-                var fileAttrs = new FileInfo(e.FullPath).Attributes;
-                if (!(IsInOutputDirectory(e.FullPath) && 
-                      fileAttrs.HasFlag(FileAttributes.Directory) && 
-                      fileAttrs.HasFlag(FileAttributes.Hidden)))
-                {
-                    Console.WriteLine("\nChange detected, regenerating files");
-                    new BuildCommand().Run();
-                }
-
-                watcher.EnableRaisingEvents = true;
-            };
-            watcher.EnableRaisingEvents = true;
-        }
-
-        private bool IsInOutputDirectory(string filepath)
-        {
-            return filepath.StartsWith(Path.GetFullPath(BuildCommand.DefaultOutputDirectory), StringComparison.CurrentCulture);
         }
     }
 }

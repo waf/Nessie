@@ -17,31 +17,31 @@ namespace Nessie.Services
         private readonly TemplateConverter templater;
         private readonly MarkdownConverter markdown;
 
-        public FileGenerator(string inputRoot, TemplateConverter templater = null, MarkdownConverter markdown = null)
+        public FileGenerator(TemplateConverter templater, MarkdownConverter markdown)
         {
-            this.templater = templater ?? new TemplateConverter(inputRoot);
-            this.markdown = markdown ?? new MarkdownConverter();
+            this.templater = templater;
+            this.markdown = markdown;
         }
 
-        public FileOutput GenerateFile(FileLocation inputFileLocation, string inputContent, string[] templates, Dictionary<string, IBuffer<Hash>> projectVariables)
+        public FileOutput GenerateFile(string inputRoot, FileLocation inputFileLocation, string inputContent, string[] templates, Dictionary<string, IBuffer<Hash>> projectVariables)
         {
             Hash fileVariables;
             // all files are transformed by the templater
-            string fileOutput = templater.Convert(inputContent, projectVariables.AsTemplateValues(), out fileVariables);
+            string fileOutput = templater.Convert(inputRoot, inputContent, projectVariables.AsTemplateValues(), out fileVariables);
 
             // markdown files get some additional processing
             if (inputFileLocation.Extension == ".md")
             {
-                fileOutput = TransformMarkdownFile(fileOutput, projectVariables, fileVariables, templates);
+                fileOutput = TransformMarkdownFile(inputRoot, fileOutput, projectVariables, fileVariables, templates);
             }
 
-            var outputLocation = CreateOutputFileName(inputFileLocation, fileVariables);
+            var outputLocation = CreateOutputFileName(inputRoot, inputFileLocation, fileVariables);
             return new FileOutput(outputLocation, fileOutput, fileVariables);
         }
 
         static readonly char[] NewLines =  { '\r', '\n' };
 
-        private string TransformMarkdownFile(string fileContents, Dictionary<string, IBuffer<Hash>> projectVariables, Hash fileVariables, string[] templates)
+        private string TransformMarkdownFile(string inputRoot, string fileContents, Dictionary<string, IBuffer<Hash>> projectVariables, Hash fileVariables, string[] templates)
         {
             if (!string.IsNullOrWhiteSpace(fileContents))
             {
@@ -64,7 +64,7 @@ namespace Nessie.Services
                 foreach (var template in templates)
                 {
                     Hash iterationExports;
-                    fileContents = templater.Convert(template, exports, out iterationExports);
+                    fileContents = templater.Convert(inputRoot, template, exports, out iterationExports);
                     exports.Merge(iterationExports);
                     if (!string.IsNullOrWhiteSpace(fileContents))
                     {
@@ -76,12 +76,12 @@ namespace Nessie.Services
             return fileContents;
         }
 
-        private FileLocation CreateOutputFileName(FileLocation file, Hash variables)
+        private FileLocation CreateOutputFileName(string inputRoot, FileLocation file, Hash variables)
         {
             string outputPattern;
             string prefix =
                 variables.TryGetVariable("nessie-url-prefix", out outputPattern) ?
-                templater.Convert(outputPattern, variables) :
+                templater.Convert(inputRoot, outputPattern, variables) :
                 file.Directory;
 
             string filename = file.Category == "" ?

@@ -14,22 +14,16 @@ namespace Nessie.Services.Converters
     /// </summary>
     public class TemplateConverter
     {
-        public TemplateConverter(string inputRoot)
-        {
-            string absoluteRoot = Path.GetFullPath(inputRoot);
-            Template.FileSystem = new NessieLiquidFileSystem(absoluteRoot);
-        }
-
         /// <summary>
         /// Processes the Liquid template tags in a string.
         /// </summary>
         /// <param name="input">The input string, with Liquid template tags</param>
         /// <param name="inputVariables">the variables available to the input file</param>
         /// <returns>The output string with all template tags processed</returns>
-        internal string Convert(string input, Hash inputVariables)
+        internal string Convert(string inputRoot, string input, Hash inputVariables)
         {
             Hash _;
-            return Convert(input, inputVariables, out _);
+            return Convert(inputRoot, input, inputVariables, out _);
         }
 
         /// <summary>
@@ -39,8 +33,13 @@ namespace Nessie.Services.Converters
         /// <param name="inputVariables">the variables available to the input file</param>
         /// <param name="outputVariables">any variables that this file sets</param>
         /// <returns>The HTML, with all template tags processed</returns>
-        internal string Convert(string html, Hash inputVariables, out Hash outputVariables)
+        internal string Convert(string inputRoot, string html, Hash inputVariables, out Hash outputVariables)
         {
+            if(Template.FileSystem == null)
+            {
+                string absoluteRoot = Path.GetFullPath(inputRoot);
+                Template.FileSystem = new NessieLiquidFileSystem(absoluteRoot);
+            }
             var template = Template.Parse(html);
             string itemOutput = template.Render(inputVariables);
             outputVariables = template.InstanceAssigns;

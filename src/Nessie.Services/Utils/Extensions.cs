@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace Nessie
 {
+    public delegate string ReadFromFile(string path);
+    public delegate void WriteToFile(string path, string text);
+
     static class Extensions
     {
         public static string RenderFromStringDictionary<T>(this Template template, IDictionary<string, T> templateValues)
