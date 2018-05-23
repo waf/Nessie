@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "Nessie": {
-      "commandName": "Project",
-      "commandLineArgs": "build -w",
-      "workingDirectory": "C:\\Users\\wafuqua\\Documents\\Visual Studio 2015\\Projects\\Nessie\\src\\Nessie\\bin\\test"
-    }
-  }
-}

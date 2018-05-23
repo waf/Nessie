@@ -145,7 +145,9 @@ namespace Nessie.Services
 
         private static string MakeFileRelativeToPath(FileLocation file, string path)
         {
-            return file.FullyQualifiedName.Replace(path, "").TrimStart(Path.DirectorySeparatorChar);
+            return file.FullyQualifiedName.StartsWith(path)
+                ? file.FullyQualifiedName.Substring(path.Length).TrimStart(Path.DirectorySeparatorChar)
+                : file.FullyQualifiedName;
         }
     }
 }

@@ -12,6 +12,8 @@ using DotLiquid;
 namespace Nessie.Services
 {
     /// <summary>
+    /// Required integration point for DotLiquid library.
+    /// 
     /// This implements an abstract file system which retrieves template files.
     /// File names are automatically prefixed with '_partial_'
     /// For security reasons, template paths are only allowed to contain letters, numbers, and underscore.
