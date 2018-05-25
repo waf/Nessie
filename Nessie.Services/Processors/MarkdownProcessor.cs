@@ -7,27 +7,27 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Nessie.Services.Converters
+namespace Nessie.Services.Processors
 {
     /// <summary>
-    /// Markdown converter, using Pandoc
+    /// Markdown processor, using Pandoc
     /// </summary>
-    public class MarkdownConverter
+    public class MarkdownProcessor
     {
-        private static string PandocLocation;
+        private static readonly string PandocLocation;
 
-        static MarkdownConverter()
+        static MarkdownProcessor()
         {
             string currentDirectory =
                 Path.GetDirectoryName(
-                    typeof(MarkdownConverter).GetTypeInfo().Assembly.Location
+                    typeof(MarkdownProcessor).GetTypeInfo().Assembly.Location
                 );
             PandocLocation = Path.Combine(currentDirectory, @"lib\pandoc.exe");
         }
 
         public string Convert(string source)
         {
-            string args = "-f markdown -t html";
+            const string args = "-f markdown -t html";
             Process p = new Process
             {
                 StartInfo = new ProcessStartInfo(PandocLocation, args)

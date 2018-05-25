@@ -7,16 +7,12 @@ using System.Threading.Tasks;
 
 namespace Nessie
 {
-    public delegate string ReadFromFile(string path);
-    public delegate void WriteToFile(string path, string text);
-
-    static class Extensions
+    public static class Extensions
     {
-        public static string RenderFromStringDictionary<T>(this Template template, IDictionary<string, T> templateValues)
+        public static string RenderFromStringDictionary<T>(this Template template, IDictionary<string, T> templateValuesDictionary)
         {
-            // hack to get around lack of safe covariance in IDictionary
-            var objectDictionary = templateValues.ToDictionary(k => k.Key, k => (object)k.Value);
-            return template.Render(Hash.FromDictionary(objectDictionary));
+            var hash = templateValuesDictionary.AsTemplateValues();
+            return template.Render(hash);
         }
 
         public static Hash AsTemplateValues<T>(this IDictionary<string, T> templateValues)
@@ -28,8 +24,7 @@ namespace Nessie
 
         public static bool TryGetVariable(this Hash hash, string key, out string value)
         {
-            object result;
-            var success = hash.TryGetValue(key, out result);
+            var success = hash.TryGetValue(key, out object result);
             value = success ? (string)result : null;
             return success;
         }

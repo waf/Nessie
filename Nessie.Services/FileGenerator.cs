@@ -1,5 +1,5 @@
 ﻿using DotLiquid;
-using Nessie.Services.Converters;
+using Nessie.Services.Processors;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,11 +14,11 @@ namespace Nessie.Services
     /// </summary>
     public class FileGenerator
     {
-        private readonly TemplateConverter templater;
-        private readonly MarkdownConverter markdown;
+        private readonly TemplateProcessor templater;
+        private readonly MarkdownProcessor markdown;
         private static readonly char[] NewLines =  { '\r', '\n' };
 
-        public FileGenerator(TemplateConverter templater, MarkdownConverter markdown)
+        public FileGenerator(TemplateProcessor templater, MarkdownProcessor markdown)
         {
             this.templater = templater;
             this.markdown = markdown;
@@ -62,8 +62,7 @@ namespace Nessie.Services
 
             foreach (var template in templates)
             {
-                Hash iterationExports;
-                fileContents = templater.Convert(inputRoot, template, exports, out iterationExports);
+                fileContents = templater.Convert(inputRoot, template, exports, out Hash iterationExports);
                 exports.Merge(iterationExports);
                 if (!string.IsNullOrWhiteSpace(fileContents))
                 {

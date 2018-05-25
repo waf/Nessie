@@ -16,8 +16,8 @@ namespace Nessie
             this.Output = output;
         }
 
-        public FileLocation Name { get; private set; }
-        public string Output { get; private set; }
-        public Hash Variables { get; private set; }
+        public FileLocation Name { get; }
+        public string Output { get; }
+        public Hash Variables { get; }
     }
 }

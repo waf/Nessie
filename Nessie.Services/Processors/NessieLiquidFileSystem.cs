@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using DotLiquid.Exceptions;
 using DotLiquid;
 
-namespace Nessie.Services
+namespace Nessie.Services.Processors
 {
     /// <summary>
     /// Required integration point for DotLiquid library.
@@ -25,9 +25,10 @@ namespace Nessie.Services
     /// file_system.full_path("mypartial") # => "/some/path/_partial_mypartial"
     /// file_system.full_path("dir/mypartial.html") # => "/some/path/dir/_partial_mypartial.html"
     /// </summary>
-    class NessieLiquidFileSystem : IFileSystem
+    public class NessieLiquidFileSystem : IFileSystem
     {
         public string Root { get; set; }
+        private readonly static Regex TemplatePathValidator = new Regex(@"^[^.\/][a-zA-Z0-9_\/]+\.?[a-zA-Z0-9_]*$");
         private const string FilePrefix = "_partial_";
 
         public NessieLiquidFileSystem(string root)
@@ -43,7 +44,6 @@ namespace Nessie.Services
                 throw new FileSystemException("Template not found", templatePath);
             return File.ReadAllText(fullPath);
         }
-        private static Regex TemplatePathValidator = new Regex(@"^[^.\/][a-zA-Z0-9_\/]+\.?[a-zA-Z0-9_]*$");
 
         private string FullPath(string templatePath)
         {

@@ -1,6 +1,8 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Nessie.Services;
-using Nessie.Services.Converters;
+using Nessie.Services.Processors;
+using Nessie.Services.Utils;
+using Nessie.Tests.Integration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,10 +21,16 @@ namespace Nessie.Tests
         [TestInitialize]
         public void Setup()
         {
+            var fileio = new FileOperation(
+                readFile: file => filesToRead[file],
+                writeFile: (file, content) => writtenFiles[file] = content,
+                createDirectory: dir => { },
+                fileCopy: (source, dest, overwrite) => { });
+
             this.generator = new ProjectGenerator(
-                readFile: name => filesToRead[name],
-                writeFile: (name, contents) => writtenFiles[name] = contents,
-                fileGenerator: new FileGenerator(new TemplateConverter(), new MarkdownConverter()));
+                fileio: fileio,
+                fileGenerator: new FileGenerator(new TemplateProcessor(), new MarkdownProcessor()),
+                templateService: new TemplateService());
         }
 
         [TestMethod]
@@ -45,7 +53,7 @@ namespace Nessie.Tests
             Assert.AreEqual("t1 t2 <p>my posts:</p>\r\n<ul>\r\n<li>Title 1</li>\r\n<li>Title 2</li>\r\n</ul> t2 t1", writtenFiles["_output\\blog\\index.html"]);
             Assert.AreEqual("t1 t2 t3 <p>content one</p> t3 t2 t1", writtenFiles["_output\\blog\\first.html"]);
             Assert.AreEqual("t1 t2 t3 content two t3 t2 t1", writtenFiles["_output\\foo\\bar\\second.html"]);
-            Assert.AreEqual(4, writtenFiles.Count());
+            Assert.AreEqual(4, writtenFiles.Count);
         }
 
         [TestMethod]
@@ -65,7 +73,7 @@ namespace Nessie.Tests
 
             Assert.AreEqual("<p>I'm the <em>root</em> index file</p>\r\n", writtenFiles["_output\\index.html"]);
             Assert.AreEqual("t1 t2 <p>my posts:</p>\r\n<ul>\r\n<li>Title 1</li>\r\n<li>Title 2</li>\r\n</ul> t2 t1", writtenFiles["_output\\blog\\index.html"]);
-            Assert.AreEqual(2, writtenFiles.Count());
+            Assert.AreEqual(2, writtenFiles.Count);
         }
     }
 }

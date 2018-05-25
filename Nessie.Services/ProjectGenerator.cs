@@ -1,4 +1,5 @@
 ﻿using DotLiquid;
+using Nessie.Services.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,18 +10,19 @@ namespace Nessie.Services
 {
     public class ProjectGenerator
     {
-        readonly ReadFromFile ReadFile;
-        readonly WriteToFile WriteFile;
-        readonly FileGenerator fileGenerator;
-        static readonly string[] FileTypesToTransform = {
+        private readonly FileOperation fileio;
+        private readonly FileGenerator fileGenerator;
+        private readonly TemplateService templateService;
+
+        private static readonly ISet<string> FileTypesToTransform = new HashSet<string> {
             ".md", ".json", ".xml", ".txt", ".html"
         };
 
-        public ProjectGenerator(ReadFromFile readFile, WriteToFile writeFile, FileGenerator fileGenerator)
+        public ProjectGenerator(FileOperation fileio, FileGenerator fileGenerator, TemplateService templateService)
         {
-            this.ReadFile = readFile;
-            this.WriteFile = writeFile;
+            this.fileio = fileio;
             this.fileGenerator = fileGenerator;
+            this.templateService = templateService;
         }
 
         public void Generate(string inputRoot, IList<string> inputFiles, string outputRoot)
@@ -40,63 +42,10 @@ namespace Nessie.Services
             TransformFiles(inputRoot, outputRoot, transformableFiles[true].ToArray(), templates);
 
             // just copy the files we can't handle to the output root
-            CopyFiles(inputRoot, outputRoot, transformableFiles[false].ToArray());
+            fileio.CopyFiles(inputRoot, outputRoot, transformableFiles[false].ToArray());
         }
 
-        private IList<FileLocation> GetApplicableTemplates(IList<FileLocation> allTemplates, FileLocation file)
-        {
-            // only markdown files have templates applied to them
-            if(file.Extension != ".md")
-            {
-                return new List<FileLocation>();
-            }
-
-            var templatesWithCategory = (from template in allTemplates
-                                         select new
-                                         {
-                                             template,
-                                             category = template.FileNameWithoutExtension.Replace("_template_", "")
-                                         }).ToArray();
-            // if this file has a category, but there's no associated template, don't return any templates.
-            // this prevents a item/_item_foo.md being rendered with a top-level template in a parent directory.
-            if(!templatesWithCategory.Any() || (file.Category != string.Empty && templatesWithCategory.Last().category != file.Category))
-            {
-                return new List<FileLocation>();
-            }
-
-            var directories = file.Directory
-                .Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries)
-                .Aggregate(new List<string> { "" },
-                           (list, dir) =>
-                           {
-                               list.Add(Path.Combine(list.Last(), dir));
-                               return list;
-                           })
-                .ToArray();
-
-            var applicableTemplates = (from template in templatesWithCategory
-                                       where directories.Contains(template.template.Directory) &&
-                                         (template.category == "" || file.Category == template.category)
-                                       orderby template.template.FullyQualifiedName.Length descending
-                                       select template.template).ToList();
-
-            return applicableTemplates.ToList();
-        }
-
-
-        private static void CopyFiles(string inputRoot, string outputRoot, FileLocation[] files)
-        {
-            foreach (var file in files)
-            {
-                string outputFileRelativeToInputRoot = MakeFileRelativeToPath(file, inputRoot);
-                string outputLocation = Path.Combine(outputRoot, outputFileRelativeToInputRoot);
-                Console.WriteLine($"Copying {outputFileRelativeToInputRoot}");
-                Directory.CreateDirectory(Path.GetDirectoryName(outputLocation));
-                File.Copy(file.FullyQualifiedName, outputLocation, true);
-            }
-        }
-
-        private void TransformFiles(string inputRoot, string outputRoot, FileLocation[] files, FileLocation[] templates)
+        private void TransformFiles(string inputRoot, string outputRoot, FileLocation[] files, FileLocation[] allTemplates)
         {
             /* this next statement is a bit tricky, it takes advantage of laziness and a recursive variable definition.
                we want all file variables to be available to all other files when they're rendering.
@@ -112,42 +61,27 @@ namespace Nessie.Services
                 .ToDictionary(
                     fileGroup => fileGroup.Key,
                     fileGroup => fileGroup
-                                    .Select(file => fileGenerator.GenerateFile(
-                                        inputRoot,
-                                        file,
-                                        ReadFile(file.FullyQualifiedName),
-                                        GetApplicableTemplates(templates, file).Select(template => ReadFile(template.FullyQualifiedName)).ToArray(),
-                                        allFileVariables)
-                                     )
-                                    .Do(outputFile => WriteFileAndDirectories(outputRoot, inputRoot, outputFile.Name, outputFile.Output))
-                                    .Select(context => context.Variables)
-                                    .Memoize());
+                        .Select(file =>
+                        {
+                            string content = fileio.ReadFile(file.FullyQualifiedName);
+                            string[] templates = templateService.GetApplicableTemplates(allTemplates, file)
+                                .Select(template => fileio.ReadFile(template.FullyQualifiedName))
+                                .ToArray();
+                            var output = fileGenerator.GenerateFile(inputRoot, file, content, templates, allFileVariables);
+                            return output;
+                        })
+                        .Do(outputFile => fileio.WriteFileAndDirectories(outputRoot, inputRoot, outputFile.Name, outputFile.Output))
+                        .Select(context => context.Variables)
+                        .Memoize()
+                    );
 
             // evaluate the lazy values in the dictionary, to generate all the files.
             foreach (var item in allFileVariables)
             {
-                item.Value.ToList();
+                ForceEvaluation(item.Value);
             }
-        }
 
-        private void WriteFileAndDirectories(string outputRoot, string inputRoot, FileLocation file, string output)
-        {
-            if(string.IsNullOrWhiteSpace(output))
-            {
-                return;
-            }
-            string outputFileRelativeToInputRoot = MakeFileRelativeToPath(file, inputRoot);
-            string outputLocation = Path.Combine(outputRoot, outputFileRelativeToInputRoot);
-            Directory.CreateDirectory(Path.GetDirectoryName(outputLocation));
-            Console.WriteLine("Generating " + outputFileRelativeToInputRoot);
-            WriteFile(outputLocation, output);
-        }
-
-        private static string MakeFileRelativeToPath(FileLocation file, string path)
-        {
-            return file.FullyQualifiedName.StartsWith(path)
-                ? file.FullyQualifiedName.Substring(path.Length).TrimStart(Path.DirectorySeparatorChar)
-                : file.FullyQualifiedName;
+            void ForceEvaluation(IBuffer<Hash> buffer) => buffer.ToList();
         }
     }
 }

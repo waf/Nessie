@@ -1,19 +1,17 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Nessie.Commands;
 using Nessie.Services;
-using Nessie.Services.Converters;
+using Nessie.Services.Processors;
+using Nessie.Services.Utils;
 using System;
-using System.Collections.Generic;
 using System.CommandLine;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Nessie
 {
     public static class Program
     {
-        static Type[] commandTypes =
+        private static readonly Type[] commandTypes =
         {
             typeof(BuildCommand),
             typeof(ServeCommand)
@@ -36,29 +34,28 @@ namespace Nessie
                 ?.Run();
         }
 
-        static IServiceProvider ConfigureServices()
+        private static IServiceProvider ConfigureServices()
         {
             var services = new ServiceCollection();
             commandTypes.ForEach(cmd => services.AddTransient(cmd));
             services.AddTransient<ProjectGenerator>();
             services.AddTransient<FileGenerator>();
-            services.AddTransient<TemplateConverter>();
-            services.AddTransient<MarkdownConverter>();
-            services.AddTransient<ReadFromFile>(svc => File.ReadAllText);
-            services.AddTransient<WriteToFile>(svc => File.WriteAllText);
+            services.AddTransient<TemplateService>();
+            services.AddTransient<TemplateProcessor>();
+            services.AddTransient<MarkdownProcessor>();
+            services.AddTransient<FileOperation>();
             return services.BuildServiceProvider();
         }
 
-        static string ParseArguments(ICommand[] commands, string[] args)
+        private static string ParseArguments(ICommand[] commands, string[] args)
         {
             string chosenCommandName = null;
 
             ArgumentSyntax.Parse(args, syntax =>
             {
                 commands.ForEach(command =>
-                {
-                    command.DefineArguments(syntax, ref chosenCommandName);
-                });
+                    command.DefineArguments(syntax, ref chosenCommandName)
+                );
             });
 
             return chosenCommandName;

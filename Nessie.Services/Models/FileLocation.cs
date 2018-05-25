@@ -34,18 +34,18 @@ namespace Nessie
             this.Category = layout.Match(FileNameWithoutExtension).Groups["category"].Value;
         }
 
-        public string Directory { get; private set; }
+        public string Directory { get; }
 
-        public string FileNameWithoutExtension { get; private set; }
+        public string FileNameWithoutExtension { get; }
 
         /// <summary>
         /// File extension, with the leading period.
         /// </summary>
-        public string Extension { get; private set; }
+        public string Extension { get; }
 
-        public string FullyQualifiedName { get; private set; }
+        public string FullyQualifiedName { get; }
 
-        public string Category { get; private set; }
+        public string Category { get; }
 
         public override string ToString()
         {
