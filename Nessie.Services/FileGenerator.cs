@@ -24,7 +24,12 @@ namespace Nessie.Services
             this.markdown = markdown;
         }
 
-        public FileOutput GenerateFile(string inputRoot, FileLocation inputFileLocation, string inputContent, string[] templates, Dictionary<string, IBuffer<Hash>> projectVariables)
+        public FileOutput GenerateFile(
+            string inputRoot,
+            in FileLocation inputFileLocation,
+            string inputContent,
+            string[] templates,
+            Dictionary<string, IBuffer<Hash>> projectVariables)
         {
             // all files are transformed by the templater
             string fileOutput = templater.Convert(inputRoot, inputContent, projectVariables.AsTemplateValues(), out Hash fileVariables);
@@ -32,7 +37,7 @@ namespace Nessie.Services
             // markdown files get some additional processing
             if (inputFileLocation.Extension == ".md")
             {
-                fileOutput = TransformMarkdownFile(inputRoot, fileOutput, projectVariables, fileVariables, templates);
+                fileOutput = TransformMarkdownFile(inputRoot, fileOutput, templates, projectVariables, fileVariables);
             }
 
             var outputLocation = CreateOutputFileName(inputRoot, inputFileLocation, fileVariables);
@@ -40,11 +45,16 @@ namespace Nessie.Services
             return new FileOutput(outputLocation, fileOutput, fileVariables);
         }
 
-        private string TransformMarkdownFile(string inputRoot, string fileContents, Dictionary<string, IBuffer<Hash>> projectVariables, Hash fileVariables, string[] templates)
+        private string TransformMarkdownFile(
+            string inputRoot,
+            string inputContent,
+            string[] templates,
+            Dictionary<string, IBuffer<Hash>> projectVariables,
+            Hash fileVariables)
         {
-            if (!string.IsNullOrWhiteSpace(fileContents))
+            if (!string.IsNullOrWhiteSpace(inputContent))
             {
-                return markdown.Convert(fileContents);
+                return markdown.Convert(inputContent);
             }
 
             //empty output, so the file just exported variables. run the variables through the html templates until we get output
@@ -62,18 +72,18 @@ namespace Nessie.Services
 
             foreach (var template in templates)
             {
-                fileContents = templater.Convert(inputRoot, template, exports, out Hash iterationExports);
+                inputContent = templater.Convert(inputRoot, template, exports, out Hash iterationExports);
                 exports.Merge(iterationExports);
-                if (!string.IsNullOrWhiteSpace(fileContents))
+                if (!string.IsNullOrWhiteSpace(inputContent))
                 {
                     break;
                 }
             }
 
-            return fileContents;
+            return inputContent;
         }
 
-        private FileLocation CreateOutputFileName(string inputRoot, FileLocation file, Hash variables)
+        private FileLocation CreateOutputFileName(string inputRoot, in FileLocation file, Hash variables)
         {
             string prefix = variables.TryGetVariable("nessie-url-prefix", out string outputPattern)
                 ? templater.Convert(inputRoot, outputPattern, variables)

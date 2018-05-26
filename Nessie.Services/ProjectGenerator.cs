@@ -25,27 +25,29 @@ namespace Nessie.Services
             this.templateService = templateService;
         }
 
-        public void Generate(string inputRoot, IList<string> inputFiles, string outputRoot)
+        public void Generate(string inputRoot, IList<string> files, string outputRoot)
         {
-            // split file list into templates vs non-templates   
-            var isTemplateFile = inputFiles
+            var filesByTransformType = files
                 .Select(file => new FileLocation(file))
-                .ToLookup(file => file.Category == "template");
-            var templates = isTemplateFile[true].ToArray();
-            var files = isTemplateFile[false].ToArray();
+                .ToLookup(file => GetTransformType(in file));
+            var templates = filesByTransformType[TransformType.Template].ToArray();
+            var inputFiles = filesByTransformType[TransformType.Input].ToArray();
+            var filesToCopy = filesByTransformType[TransformType.Copy].ToArray();
 
-            // split non-templates into "files to transform" vs "files to copy"
-            var transformableFiles = files
-                .ToLookup(file => FileTypesToTransform.Contains(file.Extension));
+            GenerateFiles(inputRoot, outputRoot, inputFiles, templates);
 
-            // transform the "files to transform", passing in the templates
-            TransformFiles(inputRoot, outputRoot, transformableFiles[true].ToArray(), templates);
-
-            // just copy the files we can't handle to the output root
-            fileio.CopyFiles(inputRoot, outputRoot, transformableFiles[false].ToArray());
+            fileio.CopyFiles(inputRoot, outputRoot, filesToCopy);
         }
 
-        private void TransformFiles(string inputRoot, string outputRoot, FileLocation[] files, FileLocation[] allTemplates)
+        private static TransformType GetTransformType(in FileLocation file)
+        {
+            return file.Category == "template" ? TransformType.Template :
+                   FileTypesToTransform.Contains(file.Extension) ? TransformType.Input :
+                   TransformType.Copy;
+        }
+
+        private void GenerateFiles(string inputRoot, string outputRoot,
+            IReadOnlyCollection<FileLocation> files, IReadOnlyCollection<FileLocation> allTemplates)
         {
             /* this next statement is a bit tricky, it takes advantage of laziness and a recursive variable definition.
                we want all file variables to be available to all other files when they're rendering.
@@ -56,7 +58,6 @@ namespace Nessie.Services
             */
             Dictionary<string, IBuffer<Hash>> allFileVariables = null;
             allFileVariables = files
-                .Where(file => FileTypesToTransform.Contains(file.Extension))
                 .GroupBy(file => file.Category) // this gets the template variable keys available for the templates
                 .ToDictionary(
                     fileGroup => fileGroup.Key,
@@ -82,6 +83,22 @@ namespace Nessie.Services
             }
 
             void ForceEvaluation(IBuffer<Hash> buffer) => buffer.ToList();
+        }
+
+        private enum TransformType
+        {
+            /// <summary>
+            /// File will be an input to the generation process
+            /// </summary>
+            Input,
+            /// <summary>
+            /// File will act as a template for other files during the generation process
+            /// </summary>
+            Template,
+            /// <summary>
+            /// File will be copied, without modification, to the output directory
+            /// </summary>
+            Copy
         }
     }
 }

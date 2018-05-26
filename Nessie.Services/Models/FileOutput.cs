@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Nessie
 {
-    public class FileOutput
+    public readonly struct FileOutput
     {
         public FileOutput(FileLocation name, string output, Hash variables)
         {

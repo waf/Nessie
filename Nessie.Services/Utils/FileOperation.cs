@@ -5,6 +5,9 @@ using System.Text;
 
 namespace Nessie.Services.Utils
 {
+    /// <summary>
+    /// Abstraction of file and directory operations, mostly to make other classes more unit testable.
+    /// </summary>
     public class FileOperation
     {
         private readonly ReadFileFunction readFile;
@@ -17,6 +20,7 @@ namespace Nessie.Services.Utils
         public delegate void CreateDirectoryFunction(string path);
         public delegate void FileCopyFunction(string sourceFileName, string destFileName, bool overwrite);
 
+        // this constructor is used during actual runtime
         public FileOperation()
             : this(File.ReadAllText,
                    File.WriteAllText,
@@ -25,6 +29,7 @@ namespace Nessie.Services.Utils
         {
         }
 
+        // this constructor can be used during unit tests so they don't touch the filesystem
         public FileOperation(
             ReadFileFunction readFile,
             WriteFileFunction writeFile,
