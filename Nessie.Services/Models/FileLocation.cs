@@ -12,7 +12,7 @@ namespace Nessie
     /// File manipulation is pretty important for a static site generator.
     /// To avoid a lot of path/filename string-joining/string-splitting, the code works with this representation of a file.
     /// </summary>
-    public readonly struct FileLocation
+    public struct FileLocation
     {
         private readonly static Regex layout = new Regex(@"_(?<category>.+)_.*");
 

@@ -13,7 +13,7 @@ namespace Nessie.Services
 
         public IReadOnlyList<FileLocation> GetApplicableTemplates(
             IReadOnlyCollection<FileLocation> allTemplates,
-            in FileLocation file)
+            FileLocation file)
         {
             if (file.Extension != ".md")
             {
@@ -26,7 +26,7 @@ namespace Nessie.Services
 
             // if this file has a category, but there's no template in the same directory, don't return any templates.
             // this prevents a item/_item_foo.md being rendered with a top-level template in a parent directory.
-            if (!templatesWithCategory.Any() || !FileHasAdjacentTemplate(in file, templatesWithCategory))
+            if (!templatesWithCategory.Any() || !FileHasAdjacentTemplate(file, templatesWithCategory))
             {
                 return Array.Empty<FileLocation>();
             }
@@ -59,13 +59,13 @@ namespace Nessie.Services
             return applicableTemplates;
         }
 
-        private static bool FileIsInCategory(in FileLocation file, string category)
+        private static bool FileIsInCategory(FileLocation file, string category)
         {
             return category == TemplateWildcardCategory || file.Category == category;
         }
 
         // adjacent is defined as in the same directory.
-        private static bool FileHasAdjacentTemplate(in FileLocation file, (FileLocation template, string category)[] templatesWithCategory)
+        private static bool FileHasAdjacentTemplate(FileLocation file, (FileLocation template, string category)[] templatesWithCategory)
         {
             return file.Category == TemplateWildcardCategory || templatesWithCategory.Last().category == file.Category;
         }

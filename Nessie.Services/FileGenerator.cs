@@ -26,7 +26,7 @@ namespace Nessie.Services
 
         public FileOutput GenerateFile(
             string inputRoot,
-            in FileLocation inputFileLocation,
+            FileLocation inputFileLocation,
             string inputContent,
             string[] templates,
             Dictionary<string, IBuffer<Hash>> projectVariables)
@@ -83,7 +83,7 @@ namespace Nessie.Services
             return inputContent;
         }
 
-        private FileLocation CreateOutputFileName(string inputRoot, in FileLocation file, Hash variables)
+        private FileLocation CreateOutputFileName(string inputRoot, FileLocation file, Hash variables)
         {
             string prefix = variables.TryGetVariable("nessie-url-prefix", out string outputPattern)
                 ? templater.Convert(inputRoot, outputPattern, variables)

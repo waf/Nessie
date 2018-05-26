@@ -29,7 +29,7 @@ namespace Nessie.Services
         {
             var filesByTransformType = files
                 .Select(file => new FileLocation(file))
-                .ToLookup(file => GetTransformType(in file));
+                .ToLookup(file => GetTransformType(file));
             var templates = filesByTransformType[TransformType.Template].ToArray();
             var inputFiles = filesByTransformType[TransformType.Input].ToArray();
             var filesToCopy = filesByTransformType[TransformType.Copy].ToArray();
@@ -39,7 +39,7 @@ namespace Nessie.Services
             fileio.CopyFiles(inputRoot, outputRoot, filesToCopy);
         }
 
-        private static TransformType GetTransformType(in FileLocation file)
+        private static TransformType GetTransformType(FileLocation file)
         {
             return file.Category == "template" ? TransformType.Template :
                    FileTypesToTransform.Contains(file.Extension) ? TransformType.Input :
