@@ -2,6 +2,8 @@
 using Nessie.Services;
 using Nessie.Services.Processors;
 using Nessie.Services.Utils;
+using Nessie.Tests.Converters;
+using Nessie.Tests.Integration;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,29 +12,24 @@ namespace Nessie.Tests
     [TestClass]
     public class GeneratorTests
     {
+        private FakeFileSystem fs;
         private ProjectGenerator generator;
-        private IDictionary<string, string> filesToRead = null;
-        private readonly IDictionary<string, string> writtenFiles = new Dictionary<string, string>();
 
         [TestInitialize]
         public void Setup()
         {
-            var fileio = new FileOperation(
-                readFile: file => filesToRead[file],
-                writeFile: (file, content) => writtenFiles[file] = content,
-                createDirectory: dir => { },
-                fileCopy: (source, dest, overwrite) => { });
+            fs = new FakeFileSystem();
 
             this.generator = new ProjectGenerator(
-                fileio: fileio,
-                fileGenerator: new FileGenerator(new TemplateProcessor(), new MarkdownProcessor()),
+                fileio: fs.FileOperation,
+                fileGenerator: new FileGenerator(new TemplateProcessor(fs.FileOperation), new MarkdownProcessor()),
                 templateService: new TemplateService());
         }
 
         [TestMethod]
         public void Generator_WithMultipleTemplate_AppliesAllTemplates()
         {
-            filesToRead = new Dictionary<string, string>()
+            fs.InputFiles = new Dictionary<string, string>()
             {
                 {"_template_.html", "t1 {{body}} t1" },
                 {"index.md", "I'm the *root* index file" },
@@ -43,19 +40,19 @@ namespace Nessie.Tests
                 {"blog/_post_second.md", "{% assign nessie-url-prefix = 'foo\\bar' %}{% assign title = 'Title 2' %}{% capture body %} content two {% endcapture %}" },
             };
 
-            generator.Generate("", filesToRead.Select(kvp => kvp.Key).ToList(), "_output");
+            generator.Generate(FakeFileSystem.Root, fs.InputFiles.Select(kvp => kvp.Key).ToList(), "_output");
 
-            Assert.AreEqual("<p>I'm the <em>root</em> index file</p>\r\n", writtenFiles["_output\\index.html"]);
-            Assert.AreEqual("t1 t2 <p>my posts:</p>\r\n<ul>\r\n<li>Title 1</li>\r\n<li>Title 2</li>\r\n</ul> t2 t1", writtenFiles["_output\\blog\\index.html"]);
-            Assert.AreEqual("t1 t2 t3 <p>content one</p> t3 t2 t1", writtenFiles["_output\\blog\\first.html"]);
-            Assert.AreEqual("t1 t2 t3 content two t3 t2 t1", writtenFiles["_output\\foo\\bar\\second.html"]);
-            Assert.AreEqual(4, writtenFiles.Count);
+            Assert.AreEqual("<p>I'm the <em>root</em> index file</p>\r\n", fs.OutputFiles["_output\\index.html"]);
+            Assert.AreEqual("t1 t2 <p>my posts:</p>\r\n<ul>\r\n<li>Title 1</li>\r\n<li>Title 2</li>\r\n</ul> t2 t1", fs.OutputFiles["_output\\blog\\index.html"]);
+            Assert.AreEqual("t1 t2 t3 <p>content one</p> t3 t2 t1", fs.OutputFiles["_output\\blog\\first.html"]);
+            Assert.AreEqual("t1 t2 t3 content two t3 t2 t1", fs.OutputFiles["_output\\foo\\bar\\second.html"]);
+            Assert.AreEqual(4, fs.OutputFiles.Count);
         }
 
         [TestMethod]
         public void Generator_ItemsHaveNoTemplate_ItemsNotRendered()
         {
-            filesToRead = new Dictionary<string, string>()
+            fs.InputFiles = new Dictionary<string, string>()
             {
                 {"_template_.html", "t1 {{body}} t1" },
                 {"index.md", "I'm the *root* index file" },
@@ -65,11 +62,11 @@ namespace Nessie.Tests
                 {"blog/_post_second.md", "{% assign title = 'Title 2' %}{% capture body %} content two {% endcapture %}" },
             };
 
-            generator.Generate("", filesToRead.Select(kvp => kvp.Key).ToList(), "_output");
+            generator.Generate(FakeFileSystem.Root, fs.InputFiles.Select(kvp => kvp.Key).ToList(), "_output");
 
-            Assert.AreEqual("<p>I'm the <em>root</em> index file</p>\r\n", writtenFiles["_output\\index.html"]);
-            Assert.AreEqual("t1 t2 <p>my posts:</p>\r\n<ul>\r\n<li>Title 1</li>\r\n<li>Title 2</li>\r\n</ul> t2 t1", writtenFiles["_output\\blog\\index.html"]);
-            Assert.AreEqual(2, writtenFiles.Count);
+            Assert.AreEqual("<p>I'm the <em>root</em> index file</p>\r\n", fs.OutputFiles["_output\\index.html"]);
+            Assert.AreEqual("t1 t2 <p>my posts:</p>\r\n<ul>\r\n<li>Title 1</li>\r\n<li>Title 2</li>\r\n</ul> t2 t1", fs.OutputFiles["_output\\blog\\index.html"]);
+            Assert.AreEqual(2, fs.OutputFiles.Count);
         }
     }
 }

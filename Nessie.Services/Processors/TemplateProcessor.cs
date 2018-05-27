@@ -1,4 +1,6 @@
 ﻿using DotLiquid;
+using DotLiquid.FileSystems;
+using Nessie.Services.Utils;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -10,6 +12,13 @@ namespace Nessie.Services.Processors
     /// </summary>
     public class TemplateProcessor
     {
+        private readonly FileOperation fileio;
+
+        public TemplateProcessor(FileOperation fileio)
+        {
+            this.fileio = fileio;
+        }
+
         /// <summary>
         /// Processes the Liquid template tags in a string.
         /// </summary>
@@ -32,10 +41,10 @@ namespace Nessie.Services.Processors
         /// <returns>The HTML, with all template tags processed</returns>
         public string Convert(string inputRoot, string input, ImmutableDictionary<string, object> inputVariables, out ImmutableDictionary<string, object> outputVariables)
         {
-            if (Template.FileSystem == null)
+            if (Template.FileSystem is BlankFileSystem)
             {
                 string absoluteRoot = Path.GetFullPath(inputRoot);
-                Template.FileSystem = new NessieLiquidFileSystem(absoluteRoot);
+                Template.FileSystem = new NessieLiquidFileSystem(fileio, absoluteRoot);
             }
             var template = Template.Parse(input);
             string itemOutput = template.Render(ConvertToHash(inputVariables));

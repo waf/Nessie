@@ -10,11 +10,13 @@ namespace Nessie.Services.Utils
     {
         private readonly ReadFileFunction readFile;
         private readonly WriteFileFunction writeFile;
+        private readonly FileExistsFunction fileExists;
         private readonly CreateDirectoryFunction createDirectory;
         private readonly FileCopyFunction fileCopy;
 
         public delegate string ReadFileFunction(string path);
         public delegate void WriteFileFunction(string path, string text);
+        public delegate bool FileExistsFunction(string path);
         public delegate void CreateDirectoryFunction(string path);
         public delegate void FileCopyFunction(string sourceFileName, string destFileName, bool overwrite);
 
@@ -22,6 +24,7 @@ namespace Nessie.Services.Utils
         public FileOperation()
             : this(File.ReadAllText,
                    File.WriteAllText,
+                   File.Exists,
                    CreateDirectory,
                    File.Copy)
         {
@@ -31,11 +34,13 @@ namespace Nessie.Services.Utils
         public FileOperation(
             ReadFileFunction readFile,
             WriteFileFunction writeFile,
+            FileExistsFunction fileExists,
             CreateDirectoryFunction createDirectory,
             FileCopyFunction fileCopy)
         {
             this.readFile = readFile;
             this.writeFile = writeFile;
+            this.fileExists = fileExists;
             this.createDirectory = createDirectory;
             this.fileCopy = fileCopy;
         }
@@ -43,6 +48,8 @@ namespace Nessie.Services.Utils
         public string ReadFile(string path) => readFile(path);
 
         public void WriteFile(string path, string text) => writeFile(path, text);
+
+        public bool FileExists(string fullPath) => fileExists(fullPath);
 
         public void CopyFiles(string inputRoot, string outputRoot, FileLocation[] files)
         {

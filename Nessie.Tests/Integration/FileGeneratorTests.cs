@@ -16,7 +16,8 @@ namespace Nessie.Tests.Integration
         [TestInitialize]
         public void Initialize()
         {
-            generator = new FileGenerator(new TemplateProcessor(), new MarkdownProcessor());
+            var fs = new FakeFileSystem();
+            generator = new FileGenerator(new TemplateProcessor(fs.FileOperation), new MarkdownProcessor());
         }
 
         [TestMethod]

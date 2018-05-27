@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using System.Linq;
 using DotLiquid.Exceptions;
 using DotLiquid;
+using Nessie.Services.Utils;
 
 namespace Nessie.Services.Processors
 {
@@ -23,22 +24,24 @@ namespace Nessie.Services.Processors
     /// </summary>
     public class NessieLiquidFileSystem : IFileSystem
     {
-        public string Root { get; set; }
-        private readonly static Regex TemplatePathValidator = new Regex(@"^[^.\/][a-zA-Z0-9_\/]+\.?[a-zA-Z0-9_]*$");
-        private const string FilePrefix = "_partial_";
+        private readonly string root;
+        private readonly FileOperation fileio;
+        private readonly static Regex TemplatePathValidator = new Regex(@"^[^.\/\\][a-zA-Z0-9_\/\\]+\.?[a-zA-Z0-9_]*$");
+        private const string PartialPrefix = "_partial_";
 
-        public NessieLiquidFileSystem(string root)
+        public NessieLiquidFileSystem(FileOperation fileio, string root)
         {
-            Root = root;
+            this.fileio = fileio;
+            this.root = root;
         }
 
         public string ReadTemplateFile(Context context, string templateName)
         {
             string templatePath = (string) context[templateName];
             string fullPath = FullPath(templatePath);
-            if (!File.Exists(fullPath))
+            if (!fileio.FileExists(fullPath))
                 throw new FileSystemException("Template not found", templatePath);
-            return File.ReadAllText(fullPath);
+            return fileio.ReadFile(fullPath);
         }
 
         private string FullPath(string templatePath)
@@ -49,10 +52,10 @@ namespace Nessie.Services.Processors
             }
 
             string fullPath = templatePath.Contains(Path.DirectorySeparatorChar)
-                ? Path.Combine(Path.Combine(Root, Path.GetDirectoryName(templatePath)), string.Format("_partial_{0}", Path.GetFileName(templatePath)))
-                : Path.Combine(Root, string.Format("_partial_{0}", templatePath));
+                ? Path.Combine(Path.Combine(root, Path.GetDirectoryName(templatePath)), PartialPrefix + Path.GetFileName(templatePath))
+                : Path.Combine(root, PartialPrefix + templatePath);
 
-            string escapedPath = Root.Replace(@"\", @"\\").Replace("(", @"\(").Replace(")", @"\)");
+            string escapedPath = root.Replace(@"\", @"\\").Replace("(", @"\(").Replace(")", @"\)");
             if (!Regex.IsMatch(Path.GetFullPath(fullPath), string.Format("^{0}", escapedPath)))
             {
                 throw new FileSystemException("Illegal template full path", Path.GetFullPath(fullPath));
