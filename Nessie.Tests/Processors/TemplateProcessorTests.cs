@@ -1,9 +1,7 @@
-﻿using DotLiquid;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Nessie.Services.Processors;
-using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Collections.Immutable;
 
 namespace Nessie.Tests.Converters
 {
@@ -25,7 +23,7 @@ namespace Nessie.Tests.Converters
                 { "array", new[] { "yes", "no", "maybe", "so"} }
             };
 
-            string result = converter.Convert(".", template, Hash.FromDictionary(input), out Hash output);
+            string result = converter.Convert(".", template, input.ToImmutableDictionary(), out var output);
 
             Assert.AreEqual("yep", result);
         }
@@ -37,7 +35,7 @@ namespace Nessie.Tests.Converters
 
             const string template = "{% assign name = 'Fido'  %}{% capture description %} A good boy! {% endcapture %}";
 
-            converter.Convert(".", template, new Hash(), out Hash output);
+            converter.Convert(".", template, ImmutableDictionary.Create<string, object>(), out var output);
 
             Assert.AreEqual("Fido", output["name"]);
             Assert.AreEqual(" A good boy! ", output["description"]);

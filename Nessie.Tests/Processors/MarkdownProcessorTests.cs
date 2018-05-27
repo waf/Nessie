@@ -1,6 +1,4 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Nessie.Services;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Nessie.Services.Processors;
 
 namespace Nessie.Tests.Processors

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Nessie
 {
@@ -12,7 +8,7 @@ namespace Nessie
     /// File manipulation is pretty important for a static site generator.
     /// To avoid a lot of path/filename string-joining/string-splitting, the code works with this representation of a file.
     /// </summary>
-    public struct FileLocation
+    public class FileLocation
     {
         private readonly static Regex layout = new Regex(@"_(?<category>.+)_.*");
 
@@ -50,6 +46,28 @@ namespace Nessie
         public override string ToString()
         {
             return $"{FullyQualifiedName} ({Category})";
+        }
+
+        public override bool Equals(object obj)
+        {
+            var location = obj as FileLocation;
+            return location != null &&
+                   Directory == location.Directory &&
+                   FileNameWithoutExtension == location.FileNameWithoutExtension &&
+                   Extension == location.Extension &&
+                   FullyQualifiedName == location.FullyQualifiedName &&
+                   Category == location.Category;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 2039212844;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Directory);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(FileNameWithoutExtension);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Extension);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(FullyQualifiedName);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Category);
+            return hashCode;
         }
     }
 }

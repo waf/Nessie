@@ -1,11 +1,10 @@
-﻿using DotLiquid;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Nessie.Services;
 using Nessie.Services.Processors;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 
 namespace Nessie.Tests.Integration
 {
@@ -27,7 +26,7 @@ namespace Nessie.Tests.Integration
                 new FileLocation("directory/index.md"),
                 "Hello",
                 Array.Empty<string>(),
-                new Dictionary<string, IBuffer<Hash>>()
+                new Dictionary<string, IBuffer<ImmutableDictionary<string, object>>>().ToImmutableDictionary()
             );
 
             Assert.AreEqual(@"directory\index.html", output.Name.FullyQualifiedName);
@@ -38,19 +37,19 @@ namespace Nessie.Tests.Integration
         public void GenerateFile_JsonFile_ProcessesJson()
         {
             var employees = new[] { "Sarah", "Mike", "Joe", "Zippy the clown" }
-                .Select(employee => Hash.FromAnonymousObject(new
+                .Select(employee => new Dictionary<string, object>
                 {
-                    name = employee
-                }))
+                    { "name", employee }
+                }.ToImmutableDictionary())
                 .Memoize();
             var output = generator.GenerateFile(".",
                 new FileLocation(@"directory\profiles.json"),
                 @"{ 'profiles': [ '{{ employees | map: 'name' | join: ""', '"" }}' ] }",
                 Array.Empty<string>(),
-                new Dictionary<string, IBuffer<Hash>>
+                new Dictionary<string, IBuffer<ImmutableDictionary<string, object>>>
                 {
                     { "employees", employees }
-                }
+                }.ToImmutableDictionary()
             );
 
             Assert.AreEqual(@"directory\profiles.json", output.Name.FullyQualifiedName);

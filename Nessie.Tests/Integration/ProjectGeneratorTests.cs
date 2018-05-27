@@ -2,12 +2,8 @@
 using Nessie.Services;
 using Nessie.Services.Processors;
 using Nessie.Services.Utils;
-using Nessie.Tests.Integration;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Nessie.Tests
 {

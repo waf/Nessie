@@ -1,10 +1,8 @@
 ﻿using Nessie.Services;
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.CommandLine;
-using System.Threading;
 
 namespace Nessie.Commands
 {

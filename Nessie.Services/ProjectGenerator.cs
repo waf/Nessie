@@ -1,10 +1,7 @@
-﻿using DotLiquid;
-using Nessie.Services.Utils;
-using System;
+﻿using Nessie.Services.Utils;
 using System.Collections.Generic;
-using System.IO;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 
 namespace Nessie.Services
 {
@@ -56,10 +53,10 @@ namespace Nessie.Services
                     post => _post_a.md's variables, _post_b.md's variables
                     product => _product_x's variables
             */
-            Dictionary<string, IBuffer<Hash>> allFileVariables = null;
+            ImmutableDictionary<string, IBuffer<ImmutableDictionary<string, object>>> allFileVariables = null;
             allFileVariables = files
                 .GroupBy(file => file.Category) // this gets the template variable keys available for the templates
-                .ToDictionary(
+                .ToImmutableDictionary(
                     fileGroup => fileGroup.Key,
                     fileGroup => fileGroup
                         .Select(file =>
@@ -82,7 +79,7 @@ namespace Nessie.Services
                 ForceEvaluation(item.Value);
             }
 
-            void ForceEvaluation(IBuffer<Hash> buffer) => buffer.ToList();
+            void ForceEvaluation(IBuffer<ImmutableDictionary<string, object>> buffer) => buffer.ToList();
         }
 
         private enum TransformType

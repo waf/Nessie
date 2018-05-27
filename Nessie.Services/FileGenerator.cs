@@ -1,11 +1,6 @@
-﻿using DotLiquid;
-using Nessie.Services.Processors;
-using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using Nessie.Services.Processors;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Nessie.Services
 {
@@ -29,10 +24,10 @@ namespace Nessie.Services
             FileLocation inputFileLocation,
             string inputContent,
             string[] templates,
-            Dictionary<string, IBuffer<Hash>> projectVariables)
+            ImmutableDictionary<string, IBuffer<ImmutableDictionary<string, object>>> projectVariables)
         {
             // all files are transformed by the templater
-            string fileOutput = templater.Convert(inputRoot, inputContent, projectVariables.AsTemplateValues(), out Hash fileVariables);
+            string fileOutput = templater.Convert(inputRoot, inputContent, projectVariables.AsTemplateValues(), out ImmutableDictionary<string, object> fileVariables);
 
             // markdown files get some additional processing
             if (inputFileLocation.Extension == ".md")
@@ -49,31 +44,22 @@ namespace Nessie.Services
             string inputRoot,
             string inputContent,
             string[] templates,
-            Dictionary<string, IBuffer<Hash>> projectVariables,
-            Hash fileVariables)
+            ImmutableDictionary<string, IBuffer<ImmutableDictionary<string, object>>> projectVariables,
+            ImmutableDictionary<string, object> fileVariables)
         {
             if (!string.IsNullOrWhiteSpace(inputContent))
             {
                 return markdown.Convert(inputContent);
             }
 
-            //empty output, so the file just exported variables. run the variables through the html templates until we get output
-            Hash exports = fileVariables
-                .ToDictionary(kvp => kvp.Key, kvp =>
-                {
-                    string markdownText = kvp.Value.ToString();
-                    string html = markdown.Convert(markdownText).Trim(NewLines);
-                    return markdownText.Trim(NewLines).Length == markdownText.Length ? // if the input text has no wrapping whitespace
-                            html.Substring(3, html.Length - 7) : // then trim wrapping paragraph tags
-                            html;
-                })
-                .AsTemplateValues();
-            exports.Merge(projectVariables.AsTemplateValues());
+            var environment = ImmutableDictionary.Create<string, object>();
+            environment = environment.SetItems(projectVariables.AsTemplateValues());
+            environment = environment.SetItems(ProcessMarkdown(fileVariables));
 
             foreach (var template in templates)
             {
-                inputContent = templater.Convert(inputRoot, template, exports, out Hash iterationExports);
-                exports.Merge(iterationExports);
+                inputContent = templater.Convert(inputRoot, template, environment, out ImmutableDictionary<string, object> iterationExports);
+                environment = environment.SetItems(iterationExports);
                 if (!string.IsNullOrWhiteSpace(inputContent))
                 {
                     break;
@@ -83,10 +69,25 @@ namespace Nessie.Services
             return inputContent;
         }
 
-        private FileLocation CreateOutputFileName(string inputRoot, FileLocation file, Hash variables)
+        private ImmutableDictionary<string, object> ProcessMarkdown(ImmutableDictionary<string, object> fileVariables)
         {
-            string prefix = variables.TryGetVariable("nessie-url-prefix", out string outputPattern)
-                ? templater.Convert(inputRoot, outputPattern, variables)
+            var exports = fileVariables
+                .ToDictionary(kvp => kvp.Key, kvp =>
+                {
+                    string markdownText = kvp.Value.ToString();
+                    string html = markdown.Convert(markdownText).Trim(NewLines);
+                    return markdownText.Trim(NewLines).Length == markdownText.Length ? // if the input text has no wrapping whitespace
+                            html.Substring(3, html.Length - 7) : // then trim wrapping paragraph tags
+                            html as object;
+                })
+                .ToImmutableDictionary();
+            return exports;
+        }
+
+        private FileLocation CreateOutputFileName(string inputRoot, FileLocation file, ImmutableDictionary<string, object> variables)
+        {
+            string prefix = variables.TryGetValue("nessie-url-prefix", out object outputPattern)
+                ? templater.Convert(inputRoot, outputPattern.ToString(), variables)
                 : file.Directory;
 
             string filename = file.Category == ""
