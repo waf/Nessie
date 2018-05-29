@@ -19,14 +19,14 @@ namespace Nessie.DevServer
         private HttpListener listener;
         private CancellationTokenSource cancellationToken;
         private readonly string path;
-        private readonly string ip;
+        private readonly string host;
         private readonly int port;
         private readonly AutoRefresh autoRefresher;
 
-        public HttpServer(string path, string ip, int port)
+        public HttpServer(string path, string host, int port)
         {
             this.path = ReplaceWindowsSlashes(path);
-            this.ip = ip;
+            this.host = host;
             this.port = port;
             this.autoRefresher = new AutoRefresh();
         }
@@ -46,7 +46,7 @@ namespace Nessie.DevServer
             try
             {
                 listener = new HttpListener();
-                listener.Prefixes.Add(string.Format("http://{0}:{1}/", ip, port));
+                listener.Prefixes.Add(string.Format("http://{0}:{1}/", host, port));
                 listener.Start();
             }
             catch (Exception e)
@@ -63,7 +63,7 @@ namespace Nessie.DevServer
                     var context = await listener.GetContextAsync().ConfigureAwait(false);
                     _ = Task.Run(async () =>
                     {
-                        try { await ProcessContext(context).ConfigureAwait(false); }
+                        try { await ProcessContext(context, token).ConfigureAwait(false); }
                         catch (Exception e) { Console.WriteLine("ERROR: " + e.Message); }
                     });
                 }
@@ -75,7 +75,7 @@ namespace Nessie.DevServer
             }
         }
 
-        private async Task ProcessContext(HttpListenerContext context)
+        private async Task ProcessContext(HttpListenerContext context, CancellationToken token)
         {
             HttpServerResponse response;
             try
@@ -88,7 +88,10 @@ namespace Nessie.DevServer
                 response = HttpServerResponse.HtmlResponse("ERROR: " + e.Message, HttpStatusCode.InternalServerError);
             }
 
-            await StreamResponseAsync(context, response).ConfigureAwait(false);
+            if(!token.IsCancellationRequested)
+            {
+                await StreamResponseAsync(context, response, token).ConfigureAwait(false);
+            }
         }
 
         private HttpServerResponse GenerateResponse(HttpListenerContext context)
@@ -125,7 +128,7 @@ namespace Nessie.DevServer
             return HttpServerResponse.HtmlResponse("Not Found", HttpStatusCode.NotFound);
         }
 
-        private async Task StreamResponseAsync(HttpListenerContext context, HttpServerResponse response)
+        private async Task StreamResponseAsync(HttpListenerContext context, HttpServerResponse response, CancellationToken token)
         {
             Stream outputStream = context.Response.OutputStream;
 
@@ -134,9 +137,9 @@ namespace Nessie.DevServer
             context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
             using (response.Body)
             {
-                await response.Body.CopyToAsync(outputStream).ConfigureAwait(false);
-                await autoRefresher.AppendAutoRefreshJavaScript(response, outputStream).ConfigureAwait(false);
-                await outputStream.FlushAsync().ConfigureAwait(false);
+                await response.Body.CopyToAsync(outputStream, 81920, token).ConfigureAwait(false);
+                await autoRefresher.AppendAutoRefreshJavaScript(response, outputStream, token).ConfigureAwait(false);
+                await outputStream.FlushAsync(token).ConfigureAwait(false);
             }
             outputStream.Close();
         }

@@ -54,11 +54,11 @@ namespace Nessie.DevServer
                 .AppendLine(":stayin' alive") // ':' is the comment character for SSE
                 .AppendLine();
 
-        public async Task AppendAutoRefreshJavaScript(HttpServerResponse response, Stream outputStream)
+        public async Task AppendAutoRefreshJavaScript(HttpServerResponse response, Stream outputStream, CancellationToken token)
         {
             if (response.ContentType == "text/html")
             {
-                await outputStream.WriteAsync(JavaScript, 0, JavaScript.Length).ConfigureAwait(false);
+                await outputStream.WriteAsync(JavaScript, 0, JavaScript.Length, token).ConfigureAwait(false);
             }
         }
     }

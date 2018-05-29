@@ -66,7 +66,6 @@ namespace Nessie.Commands
             OnBuilt?.Invoke(this, EventArgs.Empty);
         }
 
-
         private static bool IsValidInputFile(string file)
         {
             bool isHiddenFile = new FileInfo(file).Attributes.HasFlag(FileAttributes.Hidden);

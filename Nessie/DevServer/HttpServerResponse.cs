@@ -31,7 +31,7 @@ namespace Nessie.DevServer
                 {
                     { "Last-Modified", File.GetLastWriteTime(filePath).ToString("r") }
                 },
-                new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read),
+                new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: true),
                 MimeTypeMap.GetMimeType(Path.GetExtension(filePath))
             );
         }
