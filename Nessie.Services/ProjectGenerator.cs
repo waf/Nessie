@@ -15,6 +15,8 @@ namespace Nessie.Services
             ".md", ".json", ".xml", ".txt", ".html"
         };
 
+        public ProjectGenerator() : this(new FileOperation(), new FileGenerator(), new TemplateService()) { }
+
         public ProjectGenerator(FileOperation fileio, FileGenerator fileGenerator, TemplateService templateService)
         {
             this.fileio = fileio;

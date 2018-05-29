@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -10,16 +10,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <RdXmlFile Include="rd.xml" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.3" />
-    <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.3" />
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.2.4" />
+    <PackageReference Include="MediaTypeMap.Core" Version="2.3.3" />
     <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-*" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
-    <PackageReference Include="System.CommandLine" Version="0.1.0-preview2-180503-2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Nessie.Services\Nessie.Services.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>

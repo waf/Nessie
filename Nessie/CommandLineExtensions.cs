@@ -1,28 +1,25 @@
-﻿using System.CommandLine;
+﻿
+using McMaster.Extensions.CommandLineUtils;
+using System;
 
 namespace Nessie
 {
     static class CommandLineExtensions
     {
-        public static Argument<int> DefineOption(this ArgumentSyntax syntax, string name, int defaultValue, string help)
-        {
-            var arg = syntax.DefineOption(name, defaultValue);
-            arg.Help = help;
-            return arg;
-        }
+        public static int GetValueOrDefault(this CommandOption option, int defaultValue) =>
+            ConditionallyParse(option, int.Parse, defaultValue);
 
-        public static Argument<bool> DefineOption(this ArgumentSyntax syntax, string name, bool defaultValue, string help)
-        {
-            var arg = syntax.DefineOption(name, defaultValue);
-            arg.Help = help;
-            return arg;
-        }
+        public static bool GetValueOrDefault(this CommandOption option, bool defaultValue) =>
+            option.OptionType == CommandOptionType.NoValue
+                ? option.HasValue()
+                : ConditionallyParse(option, bool.Parse, defaultValue);
 
-        public static Argument<string> DefineOption(this ArgumentSyntax syntax, string name, string defaultValue, string help)
-        {
-            var arg = syntax.DefineOption(name, defaultValue);
-            arg.Help = help;
-            return arg;
-        }
+        public static string GetValueOrDefault(this CommandOption option, string defaultValue) =>
+            ConditionallyParse(option, x => x, defaultValue);
+
+        private static T ConditionallyParse<T>(CommandOption option, Func<string, T> parse, T defaultValue) =>
+            option.HasValue()
+                ? parse(option.Value())
+                : defaultValue;
     }
 }

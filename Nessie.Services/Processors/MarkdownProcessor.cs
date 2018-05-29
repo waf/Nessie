@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
@@ -13,11 +14,8 @@ namespace Nessie.Services.Processors
 
         static MarkdownProcessor()
         {
-            string currentDirectory =
-                Path.GetDirectoryName(
-                    typeof(MarkdownProcessor).GetTypeInfo().Assembly.Location
-                );
-            PandocLocation = Path.Combine(currentDirectory, @"lib\pandoc.exe");
+            string executableDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            PandocLocation = Path.Combine(executableDirectory, @"lib\pandoc.exe");
         }
 
         public string Convert(string source)

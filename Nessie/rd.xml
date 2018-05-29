@@ -1,5 +1,0 @@
-<Directives>
-    <Application>
-        <Assembly Name="Nessie" Dynamic="Required All" />
-    </Application>
-</Directives>

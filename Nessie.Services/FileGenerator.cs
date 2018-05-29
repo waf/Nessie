@@ -13,6 +13,8 @@ namespace Nessie.Services
         private readonly MarkdownProcessor markdown;
         private static readonly char[] NewLines =  { '\r', '\n' };
 
+        public FileGenerator() : this(new TemplateProcessor(), new MarkdownProcessor()) { }
+
         public FileGenerator(TemplateProcessor templater, MarkdownProcessor markdown)
         {
             this.templater = templater;

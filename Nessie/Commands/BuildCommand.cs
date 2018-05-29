@@ -2,43 +2,48 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.CommandLine;
 
 namespace Nessie.Commands
 {
-    class BuildCommand : ICommand
+    sealed class BuildCommand
     {
-        public string Name => "build";
-        public const string OutputDirectory = "_output";
+        private readonly ProjectGenerator projectGenerator;
+        private FileSystemWatcher watcher;
 
-        // command line parameters
-        bool watch;
+        /// <summary>
+        /// Fired whenever a build is complete
+        /// </summary>
+        public event EventHandler OnBuilt;
 
-        // dependencies
-        readonly ProjectGenerator projectGenerator;
-
+        public BuildCommand() : this(new ProjectGenerator()) { }
+        
         public BuildCommand(ProjectGenerator projectGenerator)
         {
             this.projectGenerator = projectGenerator;
         }
 
-        public void DefineArguments(ArgumentSyntax syntax, ref string command)
+        /// <summary>
+        /// Build the project
+        /// </summary>
+        /// <param name="watch">If true, watch for filesystem changes and rebuild</param>
+        /// <param name="silent">If true, don't prompt for user input</param>
+        /// <returns></returns>
+        public int Run(bool watch, bool silent)
         {
-            syntax.DefineCommand(Name, ref command, "generates the static site");
-            watch = syntax.DefineOption("w|watch", false, "watch the filesystem for changes and rebuild").Value;
-        }
-
-        public int Run()
-        {
-            string projectDirectory = FindProjectDirectory(Path.GetFullPath("."));
+            string projectDirectory = ProjectLocator.FindProjectDirectory();
 
             Build(projectDirectory);
 
             if (watch)
             {
                 RunFileWatcher(projectDirectory);
-                Console.WriteLine("Press any key to quit.");
-                Console.ReadKey();
+
+                if(!silent)
+                {
+                    Console.WriteLine("Press any key to quit.");
+                    Console.WriteLine();
+                    Console.ReadKey();
+                }
             }
 
             return 0;
@@ -51,46 +56,35 @@ namespace Nessie.Commands
                 .Where(IsValidInputFile)
                 .ToList();
 
-            projectGenerator.Generate(projectDirectory, files, Path.Combine(projectDirectory, OutputDirectory));
+            projectGenerator.Generate(
+                projectDirectory,
+                files,
+                Path.Combine(projectDirectory, ProjectLocator.OutputDirectory));
 
             string time = DateTime.Now.ToString("T");
             Console.WriteLine($"{time}: Built site");
+            OnBuilt?.Invoke(this, EventArgs.Empty);
         }
 
-        private string FindProjectDirectory(string originalPath)
-        {
-            return FindProjectDirectory(originalPath, originalPath);
-        }
-
-        private string FindProjectDirectory(string originalPath, string thisPath)
-        {
-            if(Directory.GetDirectories(thisPath).Contains(OutputDirectory))
-            {
-                return thisPath;
-            }
-            string parent = Directory.GetParent(thisPath)?.FullName;
-            bool atRootDirectory = parent == null;
-            if(atRootDirectory)
-            {
-                return originalPath;
-            }
-            return FindProjectDirectory(originalPath, parent);
-        }
 
         private static bool IsValidInputFile(string file)
         {
             bool isHiddenFile = new FileInfo(file).Attributes.HasFlag(FileAttributes.Hidden);
-            bool isOutputFile = file.Split(Path.DirectorySeparatorChar).Any(part => part == OutputDirectory);
+            bool isOutputFile = file
+                .Split(Path.DirectorySeparatorChar)
+                .Any(part => part == ProjectLocator.OutputDirectory);
             return !(isHiddenFile || isOutputFile);
         }
 
         private void RunFileWatcher(string projectDirectory)
         {
             Console.WriteLine("Watching for file changes");
-            var watcher = new FileSystemWatcher();
-            watcher.Path = projectDirectory;
-            watcher.IncludeSubdirectories = true;
-            watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+            watcher = new FileSystemWatcher
+            {
+                Path = projectDirectory,
+                IncludeSubdirectories = true,
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName
+            };
             watcher.Changed += (sender, e) => {
                 watcher.EnableRaisingEvents = false;
 

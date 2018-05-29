@@ -14,6 +14,8 @@ namespace Nessie.Services.Processors
     {
         private readonly FileOperation fileio;
 
+        public TemplateProcessor() : this(new FileOperation()) { }
+
         public TemplateProcessor(FileOperation fileio)
         {
             this.fileio = fileio;
