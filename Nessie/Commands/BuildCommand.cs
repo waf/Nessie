@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Nessie.Commands
 {
-    sealed class BuildCommand
+    public sealed class BuildCommand
     {
         private readonly ProjectGenerator projectGenerator;
         private FileSystemWatcher watcher;
@@ -87,8 +87,8 @@ namespace Nessie.Commands
             watcher.Changed += (sender, e) => {
                 watcher.EnableRaisingEvents = false;
 
-                if (IsValidInputFile(e.FullPath) &&
-                    !new FileInfo(e.FullPath).Attributes.HasFlag(FileAttributes.Directory))
+                if (IsValidInputFile(e.FullPath)
+                    && !new FileInfo(e.FullPath).Attributes.HasFlag(FileAttributes.Directory))
                 {
                     Console.WriteLine("\nChange detected, regenerating files");
                     Build(projectDirectory);

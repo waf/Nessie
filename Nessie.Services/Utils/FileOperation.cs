@@ -56,7 +56,7 @@ namespace Nessie.Services.Utils
             foreach (var file in files)
             {
                 string outputFileRelativeToInputRoot = MakeFileRelativeToPath(file, inputRoot);
-                string outputLocation = Path.Combine(outputRoot, outputFileRelativeToInputRoot);
+                string outputLocation = ReplaceWindowsPathSeparator(Path.Combine(outputRoot, outputFileRelativeToInputRoot));
                 Console.WriteLine($"Copying {outputFileRelativeToInputRoot}");
                 createDirectory(outputLocation);
                 fileCopy(file.FullyQualifiedName, outputLocation, true);
@@ -70,7 +70,7 @@ namespace Nessie.Services.Utils
                 return;
             }
             string outputFileRelativeToInputRoot = MakeFileRelativeToPath(file, inputRoot);
-            string outputLocation = Path.Combine(outputRoot, outputFileRelativeToInputRoot);
+            string outputLocation = ReplaceWindowsPathSeparator(Path.Combine(outputRoot, outputFileRelativeToInputRoot));
             createDirectory(outputLocation);
             Console.WriteLine("Generating " + outputFileRelativeToInputRoot);
             WriteFile(outputLocation, output);
@@ -79,11 +79,14 @@ namespace Nessie.Services.Utils
         private static string MakeFileRelativeToPath(FileLocation file, string path)
         {
             return file.FullyQualifiedName.StartsWith(path)
-                ? file.FullyQualifiedName.Substring(path.Length).TrimStart(Path.DirectorySeparatorChar)
+                ? file.FullyQualifiedName.Substring(path.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
                 : file.FullyQualifiedName;
         }
 
         private static void CreateDirectory(string directory) =>
             Directory.CreateDirectory(Path.GetDirectoryName(directory));
+
+        public static string ReplaceWindowsPathSeparator(string path) =>
+            path.Replace('\\', '/');
     }
 }

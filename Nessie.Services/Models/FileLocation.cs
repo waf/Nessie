@@ -5,8 +5,8 @@ using System.Text.RegularExpressions;
 namespace Nessie
 {
     /// <summary>
-    /// File manipulation is pretty important for a static site generator.
-    /// To avoid a lot of path/filename string-joining/string-splitting, the code works with this representation of a file.
+    /// File manipulation is important for a static site generator.
+    /// To avoid a lot of ad-hoc path string joining/splitting, the code works with this representation of a file.
     /// </summary>
     public class FileLocation
     {
@@ -32,6 +32,8 @@ namespace Nessie
 
         public string Directory { get; }
 
+        public string FullyQualifiedName { get; }
+
         public string FileNameWithoutExtension { get; }
 
         /// <summary>
@@ -39,8 +41,10 @@ namespace Nessie
         /// </summary>
         public string Extension { get; }
 
-        public string FullyQualifiedName { get; }
-
+        /// <summary>
+        /// The prefixed category of a file.
+        /// e.g. The filename "_foo_bar.txt" has a category of "foo"
+        /// </summary>
         public string Category { get; }
 
         public override string ToString()
@@ -50,13 +54,12 @@ namespace Nessie
 
         public override bool Equals(object obj)
         {
-            var location = obj as FileLocation;
-            return location != null &&
-                   Directory == location.Directory &&
-                   FileNameWithoutExtension == location.FileNameWithoutExtension &&
-                   Extension == location.Extension &&
-                   FullyQualifiedName == location.FullyQualifiedName &&
-                   Category == location.Category;
+            return obj is FileLocation location
+                   && Directory == location.Directory
+                   && FileNameWithoutExtension == location.FileNameWithoutExtension
+                   && Extension == location.Extension
+                   && FullyQualifiedName == location.FullyQualifiedName
+                   && Category == location.Category;
         }
 
         public override int GetHashCode()

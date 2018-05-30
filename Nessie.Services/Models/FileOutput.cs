@@ -13,16 +13,21 @@ namespace Nessie
         }
 
         public FileLocation Name { get; }
+
         public string Output { get; }
+
+        /// <summary>
+        /// Variables that the processing of this file has produced.
+        /// Variables are produced by evaluating Liquid templates.
+        /// </summary>
         public ImmutableDictionary<string, object> Variables { get; }
 
         public override bool Equals(object obj)
         {
-            var output = obj as FileOutput;
-            return output != null &&
-                   EqualityComparer<FileLocation>.Default.Equals(Name, output.Name) &&
-                   Output == output.Output &&
-                   EqualityComparer<ImmutableDictionary<string, object>>.Default.Equals(Variables, output.Variables);
+            return obj is FileOutput output
+                   && EqualityComparer<FileLocation>.Default.Equals(Name, output.Name)
+                   && Output == output.Output
+                   && EqualityComparer<ImmutableDictionary<string, object>>.Default.Equals(Variables, output.Variables);
         }
 
         public override int GetHashCode()

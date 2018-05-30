@@ -1,7 +1,4 @@
 ﻿/*
- * Heavily modified from: https://gist.github.com/aksakalli/9191056
- * We should really use Kestrel here instead, but Kestrel doesn't work well with
- * AOT compilation (see open issue https://github.com/aspnet/Home/issues/3079)
  */
 using System;
 using System.Net;
@@ -9,9 +6,16 @@ using System.IO;
 using System.Threading;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using Nessie.Services.Utils;
 
 namespace Nessie.DevServer
 {
+    /// <summary>
+    /// Simple <see cref="HttpListener" />-based server for local development.
+    /// We should really use Kestrel here instead, but Kestrel doesn't work well with
+    /// AOT compilation (see open issue https://github.com/aspnet/Home/issues/3079)
+    /// </summary>
     public sealed class HttpServer : IDisposable
     {
         private const string IndexFile = "index.html";
@@ -25,7 +29,7 @@ namespace Nessie.DevServer
 
         public HttpServer(string path, string host, int port)
         {
-            this.path = ReplaceWindowsSlashes(path);
+            this.path = FileOperation.ReplaceWindowsPathSeparator(path);
             this.host = host;
             this.port = port;
             this.autoRefresher = new AutoRefresh();
@@ -51,7 +55,7 @@ namespace Nessie.DevServer
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERROR: " + e.Message);
+                ReportError(e);
                 return;
             }
 
@@ -64,17 +68,21 @@ namespace Nessie.DevServer
                     _ = Task.Run(async () =>
                     {
                         try { await ProcessContext(context, token).ConfigureAwait(false); }
-                        catch (Exception e) { Console.WriteLine("ERROR: " + e.Message); }
+                        catch (Exception e) { ReportError(e); }
                     });
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("ERROR: " + e.Message);
+                    ReportError(e);
                     return;
                 }
             }
         }
 
+        /// <summary>
+        /// Process the received context from the <see cref="HttpListener"/>.
+        /// The context represents a single request/response.
+        /// </summary>
         private async Task ProcessContext(HttpListenerContext context, CancellationToken token)
         {
             HttpServerResponse response;
@@ -84,7 +92,7 @@ namespace Nessie.DevServer
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERROR: " + e.Message);
+                ReportError(e);
                 response = HttpServerResponse.HtmlResponse("ERROR: " + e.Message, HttpStatusCode.InternalServerError);
             }
 
@@ -144,18 +152,22 @@ namespace Nessie.DevServer
             outputStream.Close();
         }
 
-        private string GenerateDirectoryListing(string exactFile)
+        private string GenerateDirectoryListing(string directory)
         {
-            var entries = Directory.GetFileSystemEntries(exactFile)
+            var entries = Directory
+                .GetFileSystemEntries(directory)
                 .Select(file =>
                 {
-                    string relativePath = ReplaceWindowsSlashes(file).Replace(path, "");
+                    string relativePath = FileOperation.ReplaceWindowsPathSeparator(file).Replace(path, "");
                     string display = relativePath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).Last();
                     return $"<li><a href='{relativePath}'>{display}</a></li>";
                 });
             return $"{DirectoryListingHeader}<ul>{String.Concat(entries)}</ul>";
         }
 
+        /// <summary>
+        /// Tell all connected clients to refresh the page
+        /// </summary>
         public void SendClientRefresh() =>
             autoRefresher.SendClientRefresh();
 
@@ -174,11 +186,10 @@ namespace Nessie.DevServer
             listener = null;
         }
 
-        private static string ReplaceWindowsSlashes(string path)
-        {
-            return path.Replace('\\', '/');
-        }
+        private static void ReportError(Exception e, [CallerMemberName] string caller = null) =>
+            Console.Error.WriteLine($"ERROR ({caller}): {e.Message}");
 
+        // hard-coded css is the best css.
         private const string DirectoryListingHeader = @"
             <style>
             body { font-family: sans-serif; }

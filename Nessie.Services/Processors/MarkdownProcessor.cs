@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Text;
 
 namespace Nessie.Services.Processors
 {
@@ -18,13 +20,14 @@ namespace Nessie.Services.Processors
             PandocLocation = Path.Combine(executableDirectory, @"lib\pandoc.exe");
         }
 
-        public string Convert(string source)
+        public string Convert(string source, ImmutableDictionary<string, object> environment)
         {
-            const string args = "-f markdown -t html";
+            var args = environment[Settings.MarkdownSettings].ToString();
             Process p = new Process
             {
                 StartInfo = new ProcessStartInfo(PandocLocation, args)
                 {
+                    StandardOutputEncoding = Encoding.UTF8,
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
                     UseShellExecute = false

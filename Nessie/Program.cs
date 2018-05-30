@@ -1,7 +1,5 @@
 ﻿using McMaster.Extensions.CommandLineUtils;
 using Nessie.Commands;
-using System;
-using System.ComponentModel.DataAnnotations;
 
 namespace Nessie
 {
@@ -24,12 +22,23 @@ namespace Nessie
 
         public static CommandLineApplication DefineOptions()
         {
-            var app = new CommandLineApplication();
-            app.Name = "nessie";
-            app.FullName = "Nessie";
+            var app = new CommandLineApplication
+            {
+                Name = "nessie",
+                FullName = "Nessie"
+            };
+            app.OnExecute(() => app.ShowHelp()); // when no commands are supplied
             app.VersionOption("-v|--version", "v0.0.1");
             app.HelpOption();
 
+            AddBuildCommand(app);
+            AddServeCommand(app);
+
+            return app;
+        }
+
+        private static void AddBuildCommand(CommandLineApplication app)
+        {
             app.Command("build", build =>
             {
                 build.Description = "Generates the static site";
@@ -45,30 +54,31 @@ namespace Nessie
                     return 0;
                 });
             });
+        }
+
+        private static void AddServeCommand(CommandLineApplication app)
+        {
+            const string DefaultHostName = "localhost";
+            const int DefaultPort = 8080;
 
             app.Command("serve", serve =>
             {
                 serve.Description = "Runs a local development HTTP server";
                 serve.HelpOption();
 
-                var hostname = serve.Option("-n|--hostname", "The hostname to use for the http server. Defaults to localhost", CommandOptionType.SingleValue);
-                var port = serve.Option("-p|--port", "The port to use for the http server. Defaults to 8080", CommandOptionType.SingleValue);
+                var hostname = serve.Option("-n|--hostname", $"The hostname to use for the http server. Defaults to {DefaultHostName}", CommandOptionType.SingleValue);
+                var port = serve.Option("-p|--port", $"The port to use for the http server. Defaults to {DefaultPort}", CommandOptionType.SingleValue);
                 var noBrowse = serve.Option("-nb|--no-browse", "Don't launch the system default browser.", CommandOptionType.NoValue);
                 serve.OnExecute(() =>
                 {
                     new ServeCommand().Run(
-                        hostname.GetValueOrDefault("localhost"),
-                        port.GetValueOrDefault(8080),
-                        browse: !noBrowse.GetValueOrDefault(true)
+                        hostname.GetValueOrDefault(DefaultHostName),
+                        port.GetValueOrDefault(DefaultPort),
+                        browse: !noBrowse.GetValueOrDefault(false)
                     );
                     return 0;
                 });
             });
-
-            // when no commands are supplied
-            app.OnExecute(() => app.ShowHelp());
-
-            return app;
         }
     }
 }

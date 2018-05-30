@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 
 namespace Nessie.Commands
 {
-    sealed class ServeCommand
+    public sealed class ServeCommand
     {
         public int Run(string hostname, int port, bool browse)
         {

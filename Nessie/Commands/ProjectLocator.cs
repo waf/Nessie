@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using System.Text;
 
 namespace Nessie.Commands
 {
-    public sealed class ProjectLocator
+    public static class ProjectLocator
     {
         public const string OutputDirectory = "_output";
 

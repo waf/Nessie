@@ -1,5 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Nessie.Services;
 using Nessie.Services.Processors;
+using System.Collections.Immutable;
 
 namespace Nessie.Tests.Processors
 {
@@ -14,9 +16,9 @@ namespace Nessie.Tests.Processors
         public void Convert_BulletedList_OutputsCorrectHtml()
         {
             var markdown = new MarkdownProcessor();
-            var result = markdown.Convert("- I'm a list item.\n- I'm another one.");
+            var result = markdown.Convert("- I'm a list item.\n- I'm another one.", Settings.Default);
             Assert.AreEqual(
-                "<ul>\r\n<li>I'm a list item.</li>\r\n<li>I'm another one.</li>\r\n</ul>\r\n",
+                "<ul>\r\n<li>I’m a list item.</li>\r\n<li>I’m another one.</li>\r\n</ul>\r\n",
                 result);
         }
     }
