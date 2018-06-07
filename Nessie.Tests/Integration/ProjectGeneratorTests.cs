@@ -42,11 +42,18 @@ namespace Nessie.Tests
 
             generator.Generate(FakeFileSystem.Root, fs.InputFiles.Select(kvp => kvp.Key).ToList(), "_output");
 
-            Assert.AreEqual("<p>I’m the <em>root</em> index file</p>\r\n", fs.OutputFiles["_output/index.html"]);
-            Assert.AreEqual("t1 t2 <p>my posts:</p>\r\n<ul>\r\n<li>Title 1</li>\r\n<li>Title 2</li>\r\n</ul> t2 t1", fs.OutputFiles["_output/blog/index.html"]);
-            Assert.AreEqual("t1 t2 t3 <p>content one</p> t3 t2 t1", fs.OutputFiles["_output/blog/first.html"]);
-            Assert.AreEqual("t1 t2 t3 content two t3 t2 t1", fs.OutputFiles["_output/foo/bar/second.html"]);
+            AreEqualIgnoringNewLines("<p>I’m the <em>root</em> index file</p>\r\n", fs.OutputFiles["_output/index.html"]);
+            AreEqualIgnoringNewLines("t1 t2<p>my posts:</p>\r\n<ul>\r\n<li>Title 1</li>\r\n<li>Title 2</li>\r\n</ul><p>t2 t1</p>", fs.OutputFiles["_output/blog/index.html"]);
+            AreEqualIgnoringNewLines("t1 t2 t3<p>content one</p><p>t3 t2 t1</p>", fs.OutputFiles["_output/blog/first.html"]);
+            AreEqualIgnoringNewLines("<p>t1 t2 t3 content two t3 t2 t1</p>", fs.OutputFiles["_output/foo/bar/second.html"]);
             Assert.AreEqual(4, fs.OutputFiles.Count);
+        }
+
+        private static void AreEqualIgnoringNewLines(string expected, string actual)
+        {
+            expected = expected.Replace("\r", "").Replace("\n", "");
+            actual = actual.Replace("\r", "").Replace("\n", "");
+            Assert.AreEqual(expected, actual);
         }
 
         [TestMethod]
@@ -64,8 +71,8 @@ namespace Nessie.Tests
 
             generator.Generate(FakeFileSystem.Root, fs.InputFiles.Select(kvp => kvp.Key).ToList(), "_output");
 
-            Assert.AreEqual("<p>I’m the <em>root</em> index file</p>\r\n", fs.OutputFiles["_output/index.html"]);
-            Assert.AreEqual("t1 t2 <p>my posts:</p>\r\n<ul>\r\n<li>Title 1</li>\r\n<li>Title 2</li>\r\n</ul> t2 t1", fs.OutputFiles["_output/blog/index.html"]);
+            AreEqualIgnoringNewLines("<p>I’m the <em>root</em> index file</p>\r\n", fs.OutputFiles["_output/index.html"]);
+            AreEqualIgnoringNewLines("t1 t2<p>my posts:</p>\r\n<ul>\r\n<li>Title 1</li>\r\n<li>Title 2</li>\r\n</ul><p>t2 t1</p>", fs.OutputFiles["_output/blog/index.html"]);
             Assert.AreEqual(2, fs.OutputFiles.Count);
         }
     }

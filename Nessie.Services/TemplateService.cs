@@ -40,10 +40,18 @@ namespace Nessie.Services
             IReadOnlyCollection<(FileLocation template, string category)> templatesWithCategory)
         {
             // expand /foo/bar/baz into a list of all parent directories e.g. '', '/foo', '/foo/bar', '/foo/bar/baz' 
-            var directories = file.Directory
+            var driveLetter = file.Directory.Length >= 2 && file.Directory[1] == ':'
+                ? file.Directory.Substring(0, 2)
+                : string.Empty;
+
+            var directoryParts = file.Directory
                 .Split(new[] { Path.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries)
-                .Prepend(string.Empty) // include root directory
-                .Scan(string.Empty, Path.Combine)
+                .Select(part => part == driveLetter ? string.Empty : part);
+
+            var directories = directoryParts
+                .Prepend(string.Empty)
+                .Scan(string.Empty, Path.Combine) // don't use Path.Combine because it doesn't handle combining with drive letters
+                .Select(path => driveLetter == string.Empty ? path : driveLetter + Path.DirectorySeparatorChar + path)
                 .ToArray();
 
             // find all templates in the parent directories that either apply to all files, or the category of this file.

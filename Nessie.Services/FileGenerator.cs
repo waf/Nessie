@@ -1,4 +1,5 @@
-﻿using Nessie.Services.Processors;
+﻿using Nessie.Services.Models;
+using Nessie.Services.Processors;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -40,7 +41,9 @@ namespace Nessie.Services
             if (inputFileLocation.Extension == ".md")
             {
                 environment = environment.SetItems(TransformMarkdownVariables(fileVariables, environment));
-                fileOutput = TransformMarkdownFile(inputRoot, fileOutput, templates, environment);
+                var processOutput = TransformMarkdownFile(inputRoot, fileOutput, templates, environment);
+                fileOutput = processOutput.Output;
+                environment = processOutput.Variables;
             }
             else
             {
@@ -52,28 +55,22 @@ namespace Nessie.Services
             return new FileOutput(outputLocation, fileOutput, fileVariables);
         }
 
-        private string TransformMarkdownFile(
+        private ProcessOutput TransformMarkdownFile(
             string inputRoot,
             string inputContent,
-            string[] templates,
-            ImmutableDictionary<string, object> environment)
+            IReadOnlyList<string> templates,
+            ImmutableDictionary<string, object> environment
+        )
         {
-            if (!string.IsNullOrWhiteSpace(inputContent))
+            if (!string.IsNullOrWhiteSpace(inputContent) || templates.Count == 0)
             {
-                return markdown.Convert(inputContent, environment);
+                var markdownContent = markdown.Convert(inputContent, environment);
+                return new ProcessOutput(markdownContent, environment);
             }
 
-            foreach (var template in templates)
-            {
-                inputContent = templater.Convert(inputRoot, template, environment, out var iterationExports);
-                environment = environment.SetItems(iterationExports);
-                if (!string.IsNullOrWhiteSpace(inputContent))
-                {
-                    break;
-                }
-            }
-
-            return inputContent;
+            inputContent = templater.Convert(inputRoot, templates.First(), environment, out var iterationExports);
+            environment = environment.SetItems(iterationExports);
+            return TransformMarkdownFile(inputRoot, inputContent, templates.Skip(1).ToArray(), environment);
         }
 
         private ImmutableDictionary<string, object> TransformMarkdownVariables(ImmutableDictionary<string, object> fileVariables, ImmutableDictionary<string, object> environment)

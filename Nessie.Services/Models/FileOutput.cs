@@ -1,41 +1,32 @@
-﻿using System.Collections.Generic;
+﻿using Nessie.Services.Models;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace Nessie
+namespace Nessie.Services.Models
 {
-    public class FileOutput
+    public class FileOutput : ProcessOutput
     {
         public FileOutput(FileLocation name, string output, ImmutableDictionary<string, object> variables)
+            : base(output, variables)
         {
             this.Name = name;
-            this.Variables = variables;
-            this.Output = output;
         }
 
         public FileLocation Name { get; }
 
-        public string Output { get; }
-
-        /// <summary>
-        /// Variables that the processing of this file has produced.
-        /// Variables are produced by evaluating Liquid templates.
-        /// </summary>
-        public ImmutableDictionary<string, object> Variables { get; }
-
         public override bool Equals(object obj)
         {
-            return obj is FileOutput output
-                   && EqualityComparer<FileLocation>.Default.Equals(Name, output.Name)
-                   && Output == output.Output
-                   && EqualityComparer<ImmutableDictionary<string, object>>.Default.Equals(Variables, output.Variables);
+            var output = obj as FileOutput;
+            return output != null &&
+                   base.Equals(obj) &&
+                   EqualityComparer<FileLocation>.Default.Equals(Name, output.Name);
         }
 
         public override int GetHashCode()
         {
-            var hashCode = 1744653196;
+            var hashCode = 890389916;
+            hashCode = hashCode * -1521134295 + base.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<FileLocation>.Default.GetHashCode(Name);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Output);
-            hashCode = hashCode * -1521134295 + EqualityComparer<ImmutableDictionary<string, object>>.Default.GetHashCode(Variables);
             return hashCode;
         }
     }

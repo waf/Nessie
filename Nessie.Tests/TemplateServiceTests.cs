@@ -21,22 +21,22 @@ namespace Nessie.Tests
             var templates = this.service.GetApplicableTemplates(
                 new[]
                 {
-                    new FileLocation("_template_.html"),
-                    new FileLocation("albums/_template_.html"),
-                    new FileLocation("albums/_template_dog.html"),
-                    new FileLocation("albums/_template_cat.html"),
-                    new FileLocation("albums/dogs/_template_dog.html"),
+                    new FileLocation("C:/_template_.html"),
+                    new FileLocation("C:/albums/_template_.html"),
+                    new FileLocation("C:/albums/_template_dog.html"),
+                    new FileLocation("C:/albums/_template_cat.html"),
+                    new FileLocation("C:/albums/dogs/_template_dog.html"),
                 },
-                new FileLocation("albums/dogs/_dog_fido.md")
+                new FileLocation("C:/albums/dogs/_dog_fido.md")
             );
 
             Assert.IsTrue(
                 new[]
                 {
-                    new FileLocation("albums/dogs/_template_dog.html"),
-                    new FileLocation("albums/_template_dog.html"),
-                    new FileLocation("albums/_template_.html"),
-                    new FileLocation("_template_.html"),
+                    new FileLocation("C:/albums/dogs/_template_dog.html"),
+                    new FileLocation("C:/albums/_template_dog.html"),
+                    new FileLocation("C:/albums/_template_.html"),
+                    new FileLocation("C:/_template_.html"),
                 }
                 .SequenceEqual(templates));
         }
@@ -47,20 +47,20 @@ namespace Nessie.Tests
             var templates = this.service.GetApplicableTemplates(
                 new[]
                 {
-                    new FileLocation("_template_.html"),
-                    new FileLocation("albums/_template_.html"),
-                    new FileLocation("albums/_template_dog.html"),
-                    new FileLocation("albums/_template_cat.html"),
-                    new FileLocation("albums/dogs/_template_dog.html"),
+                    new FileLocation("C:/_template_.html"),
+                    new FileLocation("C:/albums/_template_.html"),
+                    new FileLocation("C:/albums/_template_dog.html"),
+                    new FileLocation("C:/albums/_template_cat.html"),
+                    new FileLocation("C:/albums/dogs/_template_dog.html"),
                 },
-                new FileLocation("albums/dog.md")
+                new FileLocation("C:/albums/dog.md")
             );
 
             Assert.IsTrue(
                 new[]
                 {
-                    new FileLocation("albums/_template_.html"),
-                    new FileLocation("_template_.html"),
+                    new FileLocation("C:/albums/_template_.html"),
+                    new FileLocation("C:/_template_.html"),
                 }
                 .SequenceEqual(templates));
         }
@@ -71,13 +71,13 @@ namespace Nessie.Tests
             var templates = this.service.GetApplicableTemplates(
                 new[]
                 {
-                    new FileLocation("_template_.html"),
-                    new FileLocation("albums/_template_.html"),
-                    new FileLocation("albums/_template_dog.html"),
-                    new FileLocation("albums/_template_cat.html"),
-                    new FileLocation("albums/dogs/_template_dog.html"),
+                    new FileLocation("C:/_template_.html"),
+                    new FileLocation("C:/albums/_template_.html"),
+                    new FileLocation("C:/albums/_template_dog.html"),
+                    new FileLocation("C:/albums/_template_cat.html"),
+                    new FileLocation("C:/albums/dogs/_template_dog.html"),
                 },
-                new FileLocation("albums/dogs/_dog_fido.png")
+                new FileLocation("C:/albums/dogs/_dog_fido.png")
             );
 
             Assert.AreEqual(0, templates.Count);
