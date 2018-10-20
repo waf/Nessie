@@ -17,7 +17,9 @@ namespace Nessie
             this.Directory = directory;
             this.FileNameWithoutExtension = fileNameWithoutExtension;
             this.Extension = extension;
-            this.FullyQualifiedName = Path.Combine(this.Directory, this.FileNameWithoutExtension + this.Extension);
+            this.FullyQualifiedName = string.IsNullOrEmpty(this.Directory)
+                ? this.FileNameWithoutExtension + this.Extension
+                : this.Directory + '/' + this.FileNameWithoutExtension + this.Extension;
             this.Category = layout.Match(FileNameWithoutExtension).Groups["category"].Value;
         }
 

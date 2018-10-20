@@ -58,8 +58,8 @@ namespace Nessie.Commands
 
             projectGenerator.Generate(
                 projectDirectory,
-                files,
-                Path.Combine(projectDirectory, ProjectLocator.OutputDirectory));
+                Path.Combine(projectDirectory, ProjectLocator.OutputDirectory),
+                files);
 
             string time = DateTime.Now.ToString("T");
             Console.WriteLine($"{time}: Built site");

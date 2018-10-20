@@ -24,17 +24,17 @@ namespace Nessie.Services
             this.templateService = templateService;
         }
 
-        public void Generate(string inputRoot, IList<string> files, string outputRoot)
+        public void Generate(string inputRoot, string outputRoot, IList<string> files)
         {
             var filesByTransformType = files
                 .Select(file => new FileLocation(file))
                 .ToLookup(file => GetTransformType(file));
-            var templates = filesByTransformType[TransformType.Template].ToArray();
-            var inputFiles = filesByTransformType[TransformType.Input].ToArray();
-            var filesToCopy = filesByTransformType[TransformType.Copy].ToArray();
 
+            var inputFiles = filesByTransformType[TransformType.Input].ToArray();
+            var templates = filesByTransformType[TransformType.Template].ToArray();
             GenerateFiles(inputRoot, outputRoot, inputFiles, templates);
 
+            var filesToCopy = filesByTransformType[TransformType.Copy].ToArray();
             fileio.CopyFiles(inputRoot, outputRoot, filesToCopy);
         }
 

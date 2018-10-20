@@ -12,6 +12,7 @@ namespace Nessie.Services
             }
             .ToImmutableDictionary();
 
-        public const string MarkdownSettings = "MarkdownSettings";
+        public const string MarkdownSettings = "nessie-markdown-settings";
+        public const string ItemUrl = "nessie-item-url";
     }
 }

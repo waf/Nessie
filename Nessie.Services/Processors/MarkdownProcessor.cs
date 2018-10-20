@@ -12,13 +12,8 @@ namespace Nessie.Services.Processors
     /// </summary>
     public class MarkdownProcessor
     {
-        private static readonly string PandocLocation;
-
-        static MarkdownProcessor()
-        {
-            string executableDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            PandocLocation = Path.Combine(executableDirectory, @"lib\pandoc.exe");
-        }
+        private static readonly string PandocLocation =
+            Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"lib\pandoc.exe");
 
         public string Convert(string source, ImmutableDictionary<string, object> environment)
         {

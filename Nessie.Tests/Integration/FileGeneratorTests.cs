@@ -30,7 +30,7 @@ namespace Nessie.Tests.Integration
                 new Dictionary<string, IBuffer<ImmutableDictionary<string, object>>>().ToImmutableDictionary()
             );
 
-            Assert.AreEqual(@"directory\index.html", output.Name.FullyQualifiedName);
+            Assert.AreEqual(@"directory/index.html", output.Name.FullyQualifiedName);
             Assert.AreEqual("<p>Hello</p>\r\n", output.Output);
         }
 
@@ -44,7 +44,7 @@ namespace Nessie.Tests.Integration
                 }.ToImmutableDictionary())
                 .Memoize();
             var output = generator.GenerateFile(".",
-                new FileLocation(@"directory\profiles.json"),
+                new FileLocation(@"directory/profiles.json"),
                 @"{ 'profiles': [ '{{ employees | map: 'name' | join: ""', '"" }}' ] }",
                 Array.Empty<string>(),
                 new Dictionary<string, IBuffer<ImmutableDictionary<string, object>>>
@@ -53,7 +53,7 @@ namespace Nessie.Tests.Integration
                 }.ToImmutableDictionary()
             );
 
-            Assert.AreEqual(@"directory\profiles.json", output.Name.FullyQualifiedName);
+            Assert.AreEqual(@"directory/profiles.json", output.Name.FullyQualifiedName);
             Assert.AreEqual("{ 'profiles': [ 'Sarah', 'Mike', 'Joe', 'Zippy the clown' ] }", output.Output);
         }
     }

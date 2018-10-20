@@ -40,7 +40,7 @@ namespace Nessie.Tests
                 {"blog/_post_second.md", "{% assign nessie-url-prefix = 'foo/bar' %}{% assign title = 'Title 2' %}{% capture body %} content two {% endcapture %}" },
             };
 
-            generator.Generate(FakeFileSystem.Root, fs.InputFiles.Select(kvp => kvp.Key).ToList(), "_output");
+            generator.Generate(FakeFileSystem.Root, "_output", fs.InputFiles.Select(kvp => kvp.Key).ToList());
 
             AreEqualIgnoringNewLines("<p>I’m the <em>root</em> index file</p>\r\n", fs.OutputFiles["_output/index.html"]);
             AreEqualIgnoringNewLines("t1 t2<p>my posts:</p>\r\n<ul>\r\n<li>Title 1</li>\r\n<li>Title 2</li>\r\n</ul><p>t2 t1</p>", fs.OutputFiles["_output/blog/index.html"]);
@@ -69,7 +69,7 @@ namespace Nessie.Tests
                 {"blog/_post_second.md", "{% assign title = 'Title 2' %}{% capture body %} content two {% endcapture %}" },
             };
 
-            generator.Generate(FakeFileSystem.Root, fs.InputFiles.Select(kvp => kvp.Key).ToList(), "_output");
+            generator.Generate(FakeFileSystem.Root, "_output", fs.InputFiles.Select(kvp => kvp.Key).ToList());
 
             AreEqualIgnoringNewLines("<p>I’m the <em>root</em> index file</p>\r\n", fs.OutputFiles["_output/index.html"]);
             AreEqualIgnoringNewLines("t1 t2<p>my posts:</p>\r\n<ul>\r\n<li>Title 1</li>\r\n<li>Title 2</li>\r\n</ul><p>t2 t1</p>", fs.OutputFiles["_output/blog/index.html"]);

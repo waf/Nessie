@@ -51,8 +51,9 @@ namespace Nessie.Services
             }
 
             var outputLocation = CreateOutputFileName(inputRoot, inputFileLocation, environment);
+            environment = environment.SetItem(Settings.ItemUrl, outputLocation.FullyQualifiedName);
 
-            return new FileOutput(outputLocation, fileOutput, fileVariables);
+            return new FileOutput(outputLocation, fileOutput, environment);
         }
 
         private ProcessOutput TransformMarkdownFile(
