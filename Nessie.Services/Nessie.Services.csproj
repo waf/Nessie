@@ -9,15 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotLiquid" Version="2.0.262" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
-    <PackageReference Include="System.Interactive" Version="3.1.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="lib\pandoc.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <PackageReference Include="DotLiquid" Version="2.0.298" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
+    <PackageReference Include="System.Interactive" Version="3.2.0" />
   </ItemGroup>
 
 </Project>

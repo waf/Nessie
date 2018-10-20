@@ -18,5 +18,14 @@ namespace Nessie
             value = success ? (string)result : null;
             return success;
         }
+
+        public static ImmutableDictionary<TKey, TValue> TrySetItem<TKey, TValue>(this ImmutableDictionary<TKey, TValue> dict, TKey key, TValue value)
+        {
+            if(!dict.ContainsKey(key))
+            {
+                return dict.SetItem(key, value);
+            }
+            return dict;
+        }
     }
 }

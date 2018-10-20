@@ -1,5 +1,6 @@
 ﻿using McMaster.Extensions.CommandLineUtils;
 using Nessie.Commands;
+using Nessie.Services.Processors;
 
 namespace Nessie
 {
@@ -17,6 +18,10 @@ namespace Nessie
                 app.ShowHelp();
                 app.Error.WriteLine(parseException.Message);
                 app.Error.WriteLine();
+            }
+            catch (ErrorMessageException errorMessage)
+            {
+                app.Error.WriteLine(errorMessage.Message);
             }
         }
 

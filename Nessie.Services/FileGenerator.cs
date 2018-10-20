@@ -51,7 +51,7 @@ namespace Nessie.Services
             }
 
             var outputLocation = CreateOutputFileName(inputRoot, inputFileLocation, environment);
-            environment = environment.SetItem(Settings.ItemUrl, outputLocation.FullyQualifiedName);
+            environment = environment.TrySetItem(Settings.ItemUrl, outputLocation.FullyQualifiedName);
 
             return new FileOutput(outputLocation, fileOutput, environment);
         }
@@ -89,10 +89,10 @@ namespace Nessie.Services
             return exports;
         }
 
-        private FileLocation CreateOutputFileName(string inputRoot, FileLocation file, ImmutableDictionary<string, object> variables)
+        private FileLocation CreateOutputFileName(string inputRoot, FileLocation file, ImmutableDictionary<string, object> environment)
         {
-            string prefix = variables.TryGetValue("nessie-url-prefix", out object outputPattern)
-                ? templater.Convert(inputRoot, outputPattern.ToString(), variables)
+            string prefix = environment.TryGetValue(Settings.UrlPrefix, out object outputPattern)
+                ? templater.Convert(inputRoot, outputPattern.ToString(), environment)
                 : file.Directory;
 
             string filename = file.Category == ""
