@@ -30,15 +30,15 @@ namespace Nessie.Tests
                 new FileLocation("C:/albums/dogs/_dog_fido.md")
             );
 
-            Assert.IsTrue(
+            CollectionAssert.AreEqual(
                 new[]
                 {
                     new FileLocation("C:/albums/dogs/_template_dog.html"),
                     new FileLocation("C:/albums/_template_dog.html"),
                     new FileLocation("C:/albums/_template_.html"),
                     new FileLocation("C:/_template_.html"),
-                }
-                .SequenceEqual(templates));
+                },
+                templates.ToArray());
         }
 
         [TestMethod]

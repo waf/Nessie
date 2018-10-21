@@ -26,6 +26,10 @@ namespace Nessie
         public FileLocation(string fullFilePath)
         {
             this.Directory = Path.GetDirectoryName(fullFilePath);
+            if(this.Directory.Length == 2 && this.Directory[1] == ':') // handle edge case where "C:/Foo" returns "C:" instead of "C:/" on mac os (only unit tests?)
+            {
+                this.Directory += "/";
+            }
             this.FileNameWithoutExtension = Path.GetFileNameWithoutExtension(fullFilePath).TrimEnd('.');
             this.Extension = Path.GetExtension(fullFilePath);
             this.FullyQualifiedName = fullFilePath;

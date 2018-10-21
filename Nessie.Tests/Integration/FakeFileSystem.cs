@@ -7,7 +7,7 @@ namespace Nessie.Tests.Integration
 {
     class FakeFileSystem
     {
-        public const string Root = @"Z:\FakeFileSystem\Project";
+        public const string Root = @"Z:/FakeFileSystem/Project";
 
         public IDictionary<string, string> InputFiles { get; set; } = new Dictionary<string, string>();
         public IDictionary<string, string> OutputFiles { get; set; } = new Dictionary<string, string>();
@@ -16,9 +16,9 @@ namespace Nessie.Tests.Integration
         public FakeFileSystem()
         {
             FileOperation = new FileOperation(
-                readFile: file => InputFiles[file],
-                writeFile: (file, content) => OutputFiles[file] = content,
-                fileExists: file => InputFiles.ContainsKey(file),
+                readFile: file => InputFiles[file.NormalizeDirectorySeparators()],
+                writeFile: (file, content) => OutputFiles[file.NormalizeDirectorySeparators()] = content,
+                fileExists: file => InputFiles.ContainsKey(file.NormalizeDirectorySeparators()),
                 createDirectory: dir => { },
                 fileCopy: (source, dest, overwrite) => { });
 

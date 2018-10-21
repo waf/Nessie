@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Nessie.Services;
 using Nessie.Services.Processors;
+using Nessie.Tests.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -31,7 +32,7 @@ namespace Nessie.Tests.Integration
             );
 
             Assert.AreEqual(@"directory/index.html", output.Name.FullyQualifiedName);
-            Assert.AreEqual("<p>Hello</p>\r\n", output.Output);
+            AssertHelper.AreEqualIgnoringNewLines("<p>Hello</p>\r\n", output.Output);
         }
 
         [TestMethod]

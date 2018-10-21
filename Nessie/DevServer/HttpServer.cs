@@ -29,7 +29,7 @@ namespace Nessie.DevServer
 
         public HttpServer(string path, string host, int port)
         {
-            this.path = FileOperation.ReplaceWindowsPathSeparator(path);
+            this.path = path.NormalizeDirectorySeparators();
             this.host = host;
             this.port = port;
             this.autoRefresher = new AutoRefresh();
@@ -158,7 +158,7 @@ namespace Nessie.DevServer
                 .GetFileSystemEntries(directory)
                 .Select(file =>
                 {
-                    string relativePath = FileOperation.ReplaceWindowsPathSeparator(file).Replace(path, "");
+                    string relativePath = file.NormalizeDirectorySeparators().Replace(path, "");
                     string display = relativePath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries).Last();
                     return $"<li><a href='{relativePath}'>{display}</a></li>";
                 });

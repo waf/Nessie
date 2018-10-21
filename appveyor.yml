@@ -1,0 +1,50 @@
+version: '0.0.{build}'
+clone_depth: 1
+deploy: off
+image:
+  - ubuntu1804
+  - Visual Studio 2017
+branches:
+  only:
+  - master
+# items prefixed with 'cmd:' run only on Windows
+# items prefixed with 'sh:' run only on Ubuntu
+init:
+  - cmd: git config --global core.autocrlf true
+install:
+  # application dependencies
+  - cmd: choco install pandoc
+  - sh:  wget https://github.com/jgm/pandoc/releases/download/2.3.1/pandoc-2.3.1-1-amd64.deb && sudo dpkg -i pandoc-2.3.1-1-amd64.deb
+  # corert dependencies https://github.com/dotnet/corert/blob/master/Documentation/prerequisites-for-building.md
+  - sh:  sudo apt-get install -y clang libkrb5-dev
+before_build:
+  - dotnet --version
+  - dotnet restore --verbosity m
+build_script:
+  - dotnet build
+test_script:
+  - cd Nessie.Tests
+  - dotnet test
+after_test:
+  - cd ..
+  - cmd: dotnet publish -c release -r win-x64 -o dist/windows
+  # by default, CoreRT on linux tries to use clang-3.9, reset this to version independent
+  # https://github.com/dotnet/corert/issues/5654
+  - sh:  export CppCompilerAndLinker=clang
+  - sh:  dotnet publish -c release -r linux-x64 -o dist/linux
+for:
+  -
+    matrix:
+      only:
+        - image: Visual Studio 2017
+    artifacts:
+     - path: 'Nessie/dist/windows/nessie.exe'
+       name: Nessie (Windows)
+
+  -
+    matrix:
+      only:
+        - image: ubuntu1804
+    artifacts:
+      - path: 'Nessie/dist/linux/nessie'
+        name: Nessie (Linux)

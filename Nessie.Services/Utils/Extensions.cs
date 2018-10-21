@@ -1,5 +1,6 @@
 ﻿using DotLiquid;
 using System.Collections.Immutable;
+using System.IO;
 
 namespace Nessie
 {
@@ -27,5 +28,8 @@ namespace Nessie
             }
             return dict;
         }
+
+        public static string NormalizeDirectorySeparators(this string path) =>
+            path.Replace('\\', '/');
     }
 }

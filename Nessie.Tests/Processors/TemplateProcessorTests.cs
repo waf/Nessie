@@ -53,12 +53,12 @@ namespace Nessie.Tests.Converters
         {
             fs.InputFiles = new Dictionary<string, string>()
             {
-                { $@"{FakeFileSystem.Root}\partials\_partial_interrupting_cow.md", "mooooooooooooooo" }
+                { $@"{FakeFileSystem.Root}/partials/_partial_interrupting_cow.md", "mooooooooooooooo" }
             };
 
             var result = converter.Convert(
                 FakeFileSystem.Root,
-                @"A cow {% include 'partials\interrupting_cow.md' %} says:",
+                @"A cow {% include 'partials/interrupting_cow.md' %} says:",
                 ImmutableDictionary.Create<string, object>());
 
             Assert.AreEqual("A cow mooooooooooooooo says:", result);

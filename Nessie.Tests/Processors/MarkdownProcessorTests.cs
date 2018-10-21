@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Nessie.Services;
 using Nessie.Services.Processors;
+using Nessie.Tests.Utilities;
 using System;
 
 namespace Nessie.Tests.Processors
@@ -19,7 +20,7 @@ namespace Nessie.Tests.Processors
 
             var result = processor.Convert("# Hello World", Settings.Default);
 
-            Assert.AreEqual("<h1 id=\"hello-world\">Hello World</h1>\r\n", result);
+            AssertHelper.AreEqualIgnoringNewLines("<h1 id=\"hello-world\">Hello World</h1>\r\n", result);
         }
 
         [TestMethod]
@@ -27,7 +28,7 @@ namespace Nessie.Tests.Processors
         {
             var markdown = new MarkdownProcessor();
             var result = markdown.Convert("- I'm a list item.\n- I'm another one.", Settings.Default);
-            Assert.AreEqual(
+            AssertHelper.AreEqualIgnoringNewLines(
                 "<ul>\r\n<li>I’m a list item.</li>\r\n<li>I’m another one.</li>\r\n</ul>\r\n",
                 result);
         }

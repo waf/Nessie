@@ -32,12 +32,13 @@ namespace Nessie.Services.Processors
         public NessieLiquidFileSystem(FileOperation fileio, string root)
         {
             this.fileio = fileio;
-            this.root = root;
+            this.root = root.NormalizeDirectorySeparators();
         }
 
         public string ReadTemplateFile(Context context, string templateName)
         {
             string templatePath = (string) context[templateName];
+
             string fullPath = FullPath(templatePath);
             if (!fileio.FileExists(fullPath))
                 throw new FileSystemException("Template not found", templatePath);
@@ -50,18 +51,19 @@ namespace Nessie.Services.Processors
             {
                 throw new FileSystemException("Illegal template path", templatePath);
             }
+            templatePath = templatePath.NormalizeDirectorySeparators();
 
-            string fullPath = templatePath.Contains(Path.DirectorySeparatorChar)
+            string fullPath = templatePath.Contains('/')
                 ? Path.Combine(Path.Combine(root, Path.GetDirectoryName(templatePath)), PartialPrefix + Path.GetFileName(templatePath))
                 : Path.Combine(root, PartialPrefix + templatePath);
 
             string escapedPath = root.Replace(@"\", @"\\").Replace("(", @"\(").Replace(")", @"\)");
-            if (!Regex.IsMatch(Path.GetFullPath(fullPath), string.Format("^{0}", escapedPath)))
+            if (!Regex.IsMatch(fullPath, string.Format("^{0}", escapedPath)))
             {
                 throw new FileSystemException("Illegal template full path", Path.GetFullPath(fullPath));
             }
 
-            return fullPath;
+            return fullPath.NormalizeDirectorySeparators();
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -36,7 +37,9 @@ namespace Nessie.Services.Processors
             {
                 p.Start();
             }
-            catch (Exception ex) when (ex.Message == "The system cannot find the file specified")
+            catch (Win32Exception ex) when (
+                ex.Message == "The system cannot find the file specified" || // windows
+                ex.Message == "No such file or directory") // mac os / linux
             {
                 var error = new ErrorMessageException($"Could not find {executable} on the path. Is it installed?");
                 error.Data["Tip"] = InstallationHelp;
