@@ -2,6 +2,15 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <!-- All 3 version tags will be replaced by assembly patching -->
+    <!-- For nuget -->
+    <Version>0.0.0</Version>
+    <!-- This is the version that .NET uses at run-time for loading packages and finding types -->
+    <AssemblyVersion>0.0.0</AssemblyVersion>
+    <!-- For humans -->
+    <InformationalVersion>0.0.0</InformationalVersion>
+    <!-- This defines the version reported by the OS to other applications (e.g. Windows Explorer) -->
+    <FileVersion>0.0.0</FileVersion>
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 

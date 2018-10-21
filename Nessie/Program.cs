@@ -1,6 +1,7 @@
 ﻿using McMaster.Extensions.CommandLineUtils;
 using Nessie.Commands;
 using Nessie.Services.Processors;
+using System.Reflection;
 
 namespace Nessie
 {
@@ -35,9 +36,11 @@ namespace Nessie
                 Name = "nessie",
                 FullName = "Nessie"
             };
-            app.OnExecute(() => app.ShowHelp()); // when no commands are supplied
-            app.VersionOption("-v|--version", "v0.0.1");
             app.HelpOption();
+            app.OnExecute(() => app.ShowHelp()); // when no commands are supplied
+
+            // don't use app.VersionOptionFromAssemblyAttributes because it does not configure the -v flag.
+            app.VersionOption("-v|--version", () => Version);
 
             AddBuildCommand(app);
             AddServeCommand(app);
@@ -111,5 +114,15 @@ namespace Nessie
                 app.Error.WriteLine("  " + value);
             }
         }
+
+        /// <summary>
+        /// Read the value of the Version tag from the csproj.
+        /// The AppVeyor build process will set this tag's value.
+        /// </summary>
+        private static string Version =>
+            typeof(Program)
+                .Assembly
+                .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+                .InformationalVersion;
     }
 }

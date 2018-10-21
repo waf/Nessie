@@ -1,14 +1,21 @@
-version: '0.0.{build}'
+version: '0.1.{build}' # e.g. master.25
 clone_depth: 1
-deploy: off
-image:
-  - ubuntu1804
-  - Visual Studio 2017
-branches:
-  only:
-  - master
+
+# use APPVEYOR_BUILD_WORKER_IMAGE instead of 'image:' so we can set environment variables per image
+environment:
+  matrix:
+    # Windows with VS2017
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      RELEASE_ID: win-x64
+      BUILD_ARTIFACT: nessie.exe
+    # default version of 'ubuntu' is old for compatibility reasons. Specify the newest LTS.
+    - APPVEYOR_BUILD_WORKER_IMAGE: ubuntu1804
+      RELEASE_ID: linux-x64
+      BUILD_ARTIFACT: Nessie
+
 # items prefixed with 'cmd:' run only on Windows
 # items prefixed with 'sh:' run only on Ubuntu
+# items prefixed with 'ps:' run on both Windows and Ubuntu via PowerShell Core
 init:
   - cmd: git config --global core.autocrlf true
 install:
@@ -17,6 +24,9 @@ install:
   - sh:  wget https://github.com/jgm/pandoc/releases/download/2.3.1/pandoc-2.3.1-1-amd64.deb && sudo dpkg -i pandoc-2.3.1-1-amd64.deb
   # corert dependencies https://github.com/dotnet/corert/blob/master/Documentation/prerequisites-for-building.md
   - sh:  sudo apt-get install -y clang libkrb5-dev
+  # by default, CoreRT on linux tries to use clang-3.9, reset this to version independent
+  # https://github.com/dotnet/corert/issues/5654
+  - sh:  export CppCompilerAndLinker=clang
 before_build:
   - dotnet --version
   - dotnet restore --verbosity m
@@ -27,24 +37,39 @@ test_script:
   - dotnet test
 after_test:
   - cd ..
-  - cmd: dotnet publish -c release -r win-x64 -o dist/windows
-  # by default, CoreRT on linux tries to use clang-3.9, reset this to version independent
-  # https://github.com/dotnet/corert/issues/5654
-  - sh:  export CppCompilerAndLinker=clang
-  - sh:  dotnet publish -c release -r linux-x64 -o dist/linux
-for:
-  -
-    matrix:
-      only:
-        - image: Visual Studio 2017
-    artifacts:
-     - path: 'Nessie/dist/windows/nessie.exe'
-       name: Nessie (Windows)
+  - ps: dotnet publish -c release -r $env:RELEASE_ID -o dist/$env:RELEASE_ID
+  - ps: 7z a Nessie/dist/$env:RELEASE_ID/nessie-$env:RELEASE_ID.zip $env:APPVEYOR_BUILD_FOLDER/Nessie/dist/$env:RELEASE_ID/$env:BUILD_ARTIFACT
+artifacts:
+  - path: 'Nessie/dist/$(RELEASE_ID)/nessie-$(RELEASE_ID).zip'
+    name: 'nessie-$(RELEASE_ID).zip'
 
-  -
-    matrix:
-      only:
-        - image: ubuntu1804
-    artifacts:
-      - path: 'Nessie/dist/linux/nessie'
-        name: Nessie (Linux)
+# put the version / build number in the csproj
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  # for nuget
+  version: '{version}'
+  # The version that .NET uses at run-time for loading packages and finding types.
+  assembly_version: '{version}'
+  # for humans, e.g. `0.1.23 (master)`. Reported when Nessie is run with --version
+  informational_version: '{version} ({branch})'
+  # The version reported by the OS to other applications (e.g. Windows Explorer)
+  file_version: '{version} ({branch})'
+
+# upload release to github when a tag is pushed.
+deploy:
+  provider: GitHub
+  # we want a nice `release` name on github (not just the version)
+  # but the git `tag` should just be a the version number.
+  release: Nessie v$(APPVEYOR_REPO_TAG_NAME) 
+  tag: $(APPVEYOR_REPO_TAG_NAME)
+  description: 'Nessie, the .NET Static Site Engine. <!-- $(APPVEYOR_BUILD_VERSION) -->'
+  # encrypted token, it's ok to be in version control
+  # https://ci.appveyor.com/tools/encrypt
+  auth_token:
+    secure: qofybsIa68xXY1eZ1uRA2OglgfjzG2vjuYZm7/DZnllw6WZiv1L2Nes/az/woHrc
+  artifact: /nessie-.*\.zip/
+  prerelease: true
+  on:
+    branch: master                 # release from master branch only
+    APPVEYOR_REPO_TAG: true        # deploy on tag push only
