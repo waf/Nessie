@@ -4,6 +4,9 @@ using Nessie.Services.Processors;
 
 namespace Nessie
 {
+    /// <summary>
+    /// Main entry point, defines command line options.
+    /// </summary>
     public static class Program
     {
         public static void Main(string[] args)
@@ -21,7 +24,7 @@ namespace Nessie
             }
             catch (ErrorMessageException errorMessage)
             {
-                app.Error.WriteLine(errorMessage.Message);
+                PrintUserError(app, errorMessage);
             }
         }
 
@@ -42,6 +45,9 @@ namespace Nessie
             return app;
         }
 
+        /// <summary>
+        /// Build command builds the static site
+        /// </summary>
         private static void AddBuildCommand(CommandLineApplication app)
         {
             app.Command("build", build =>
@@ -61,6 +67,9 @@ namespace Nessie
             });
         }
 
+        /// <summary>
+        /// Serve command starts up a dev server
+        /// </summary>
         private static void AddServeCommand(CommandLineApplication app)
         {
             const string DefaultHostName = "localhost";
@@ -84,6 +93,23 @@ namespace Nessie
                     return 0;
                 });
             });
+        }
+
+        /// <summary>
+        /// Nicely format an error we want to present to the user.
+        /// </summary>
+        private static void PrintUserError(CommandLineApplication app, ErrorMessageException errorMessage)
+        {
+            app.Error.WriteLine(errorMessage.Message);
+            foreach (var line in errorMessage.Data.Keys)
+            {
+                var value = errorMessage.Data[line]?.ToString();
+                if (string.IsNullOrEmpty(value))
+                    continue;
+
+                app.Error.WriteLine(line.ToString());
+                app.Error.WriteLine("  " + value);
+            }
         }
     }
 }

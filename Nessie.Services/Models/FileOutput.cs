@@ -1,5 +1,4 @@
-﻿using Nessie.Services.Models;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace Nessie.Services.Models

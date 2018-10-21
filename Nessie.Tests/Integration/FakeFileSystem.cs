@@ -1,9 +1,7 @@
 ﻿using DotLiquid;
 using Nessie.Services.Processors;
 using Nessie.Services.Utils;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Nessie.Tests.Integration
 {

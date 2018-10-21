@@ -1,8 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Nessie.Services;
 using Nessie.Services.Processors;
-using Nessie.Services.Utils;
-using Nessie.Tests.Converters;
 using Nessie.Tests.Integration;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,7 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Nessie.Services;
 using Nessie.Services.Processors;
-using System.Collections.Immutable;
+using System;
 
 namespace Nessie.Tests.Processors
 {
@@ -13,6 +13,16 @@ namespace Nessie.Tests.Processors
     public class MarkdownProcessorTests
     {
         [TestMethod]
+        public void Convert_GivenMarkdown_OutputsHtml()
+        {
+            var processor = new MarkdownProcessor("pandoc");
+
+            var result = processor.Convert("# Hello World", Settings.Default);
+
+            Assert.AreEqual("<h1 id=\"hello-world\">Hello World</h1>\r\n", result);
+        }
+
+        [TestMethod]
         public void Convert_BulletedList_OutputsCorrectHtml()
         {
             var markdown = new MarkdownProcessor();
@@ -20,6 +30,19 @@ namespace Nessie.Tests.Processors
             Assert.AreEqual(
                 "<ul>\r\n<li>I’m a list item.</li>\r\n<li>I’m another one.</li>\r\n</ul>\r\n",
                 result);
+        }
+
+        [TestMethod]
+        public void Convert_ExecutableNotFound_ThrowsNiceError()
+        {
+            string executable = Guid.NewGuid().ToString();
+            var processor = new MarkdownProcessor(executable);
+
+            var ex = Assert.ThrowsException<ErrorMessageException>(() =>
+                processor.Convert("# Hello World", Settings.Default)
+            );
+
+            StringAssert.Contains(ex.Message, $"Could not find {executable} on the path. Is it installed?");
         }
     }
 }
