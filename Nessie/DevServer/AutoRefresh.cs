@@ -47,6 +47,7 @@ namespace Nessie.DevServer
         public void SendClientRefresh() =>
             ServerSentEvents
                 .AppendLine("data: refresh")
+                .AppendLine("retry: 500")
                 .AppendLine();
 
         private void SendKeepAliveNotification() =>

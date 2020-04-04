@@ -9,9 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotLiquid" Version="2.0.298" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.5.0" />
-    <PackageReference Include="System.Interactive" Version="3.2.0" />
+    <PackageReference Include="DotLiquid" Version="2.0.325" />
+    <PackageReference Include="System.Collections.Immutable" Version="1.7.0" />
+    <PackageReference Include="System.Interactive" Version="4.1.1" />
   </ItemGroup>
 
 </Project>
